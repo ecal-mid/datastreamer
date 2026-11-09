@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>SimData Figma Bridge</title>
+  <style>
+    :root {
+      --background: hsl(224, 71%, 4%);
+      --foreground: hsl(210, 40%, 98%);
+      --card: hsl(224, 71%, 7%);
+      --card-foreground: hsl(210, 40%, 98%);
+      --primary: hsl(189, 94%, 43%);
+      --primary-foreground: hsl(224, 71%, 4%);
+      --secondary: hsl(217, 33%, 14%);
+      --secondary-foreground: hsl(210, 40%, 98%);
+      --muted: hsl(217, 33%, 12%);
+      --muted-foreground: hsl(215, 20%, 65%);
+      --destructive: hsl(0, 84%, 60%);
+      --border: hsl(217, 33%, 16%);
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+    }
+
+    body {
+      background: var(--background);
+      color: var(--foreground);
+      padding: 14px;
+      font-size: 11px;
+      user-select: none;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+      margin-bottom: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 800;
+      font-size: 13px;
+      letter-spacing: 0.5px;
+      color: var(--foreground);
+    }
+    .brand span {
+      color: var(--primary);
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--secondary);
+      border: 1px solid var(--border);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-family: monospace;
+      color: var(--muted-foreground);
+    }
+
+    .pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--destructive);
+      display: inline-block;
+      transition: background 0.3s;
+    }
+    .pulse-dot.connected {
+      background: #10b981;
+      box-shadow: 0 0 6px #10b981;
+    }
+
+    .setup-btn {
+      width: 100%;
+      background: var(--primary);
+      color: var(--primary-foreground);
+      border: 1px solid transparent;
+      padding: 7px 12px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 11px;
+      font-family: monospace;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s ease-in-out;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    }
+    .setup-btn:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+    .setup-btn:active {
+      transform: translateY(0);
+    }
+
+    .telemetry-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .telemetry-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 10px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+
+    .card-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted-foreground);
+      margin-bottom: 3px;
+    }
+
+    .card-value {
+      font-size: 15px;
+      font-weight: 700;
+      font-family: monospace;
+      color: var(--foreground);
+    }
+    .card-value.bpm { color: #f87171; }
+    .card-value.coherence { color: #34d399; }
+    .card-value.resp { color: #38bdf8; }
+    .card-value.alpha { color: #a78bfa; }
+    .card-value.beta { color: #fbbf24; }
+
+    .info-footer {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 9px 10px;
+      font-size: 10px;
+      line-height: 1.45;
+      color: var(--muted-foreground);
+    }
+    .info-footer strong {
+      color: var(--foreground);
+    }
+
+    .variable-tag {
+      display: inline-block;
+      background: var(--secondary);
+      border: 1px solid var(--border);
+      color: var(--primary);
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-family: monospace;
+      font-size: 9px;
+      margin: 1px;
+    }
+
+    .alert-badge {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      border-radius: 6px;
+      padding: 5px 8px;
+      font-size: 10px;
+      font-weight: 600;
+      font-family: monospace;
+      text-align: center;
+      margin-bottom: 10px;
+      display: none;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="brand">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      SIM<span>DATA</span> BRIDGE
+    </div>
+    <div class="status-badge">
+      <span class="pulse-dot" id="statusDot"></span>
+      <span id="statusText">Disconnected</span>
+    </div>
+  </div>
+
+  <div id="artifactAlert" class="alert-badge">
+    ⚠️ SENSOR ARTIFACT ACTIVE
+  </div>
+
+  <button class="setup-btn" id="btnSetup">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+    Setup Bio Variables
+  </button>
+
+  <div class="telemetry-grid">
+    <div class="telemetry-card">
+      <div class="card-label">Heart Rate (BPM)</div>
+      <div class="card-value bpm" id="valBpm">--</div>
+    </div>
+    <div class="telemetry-card">
+      <div class="card-label">Coherence Score</div>
+      <div class="card-value coherence" id="valCoherence">--</div>
+    </div>
+    <div class="telemetry-card">
+      <div class="card-label">Respiration</div>
+      <div class="card-value resp" id="valResp">--</div>
+    </div>
+    <div class="telemetry-card">
+      <div class="card-label">Alpha Power</div>
+      <div class="card-value alpha" id="valAlpha">--</div>
+    </div>
+    <div class="telemetry-card">
+      <div class="card-label">Beta Power</div>
+      <div class="card-value beta" id="valBeta">--</div>
+    </div>
+    <div class="telemetry-card">
+      <div class="card-label">Rate Limiting</div>
+      <div class="card-value" style="color: var(--primary);">10 Hz</div>
+    </div>
+  </div>
+
+  <div class="info-footer">
+    <strong>Binding Guide:</strong><br>
+    Click <em>Setup Bio Variables</em> to generate the <span class="variable-tag">BioData</span> collection. Then bind <span class="variable-tag">bio_bpm</span>, <span class="variable-tag">bio_respiration</span>, <span class="variable-tag">bio_coherence</span>, <span class="variable-tag">bio_alpha</span>, or <span class="variable-tag">bio_artifact</span> directly to opacity, corner radius, rotation, or auto-layout in Figma!
+  </div>
+
+  <script>
+    const WS_URL = 'ws://localhost:8080';
+    let socket = null;
+    let reconnectTimer = null;
+
+    // 10 Hz Throttling Engine: post to Figma sandbox only every 100ms
+    const THROTTLE_MS = 100;
+    let lastPostTime = 0;
+
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+    const artifactAlert = document.getElementById('artifactAlert');
+    const valBpm = document.getElementById('valBpm');
+    const valCoherence = document.getElementById('valCoherence');
+    const valResp = document.getElementById('valResp');
+    const valAlpha = document.getElementById('valAlpha');
+    const valBeta = document.getElementById('valBeta');
+    const btnSetup = document.getElementById('btnSetup');
+
+    function connect() {
+      try {
+        console.log('[SimData Plugin] Connecting to ' + WS_URL + '...');
+        socket = new WebSocket(WS_URL);
+
+        socket.onopen = () => {
+          console.log('[SimData Plugin] Connected to WebSocket!');
+          statusDot.classList.add('connected');
+          statusText.textContent = 'ws:8080 Live';
+        };
+
+        socket.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (!data.biometrics) return;
+
+            const bpm = data.biometrics.hrv?.bpm;
+            const coh = data.biometrics.hrv?.coherence;
+            const resp = data.biometrics.respiration?.value;
+            const phase = data.biometrics.respiration?.phase;
+            const alpha = data.biometrics.eeg?.alpha;
+            const beta = data.biometrics.eeg?.beta;
+            const isArtifact = data.states?.artifact_flag;
+
+            if (bpm !== undefined) valBpm.textContent = bpm.toFixed(1);
+            if (coh !== undefined) valCoherence.textContent = coh.toFixed(2);
+            if (resp !== undefined) valResp.textContent = `${resp.toFixed(2)} (${phase === 'inhale' ? 'IN' : 'EX'})`;
+            if (alpha !== undefined) valAlpha.textContent = alpha.toFixed(2);
+            if (beta !== undefined) valBeta.textContent = beta.toFixed(2);
+
+            artifactAlert.style.display = isArtifact ? 'block' : 'none';
+
+            // Throttled transmission to Figma sandbox (10 Hz = every 100ms)
+            const now = performance.now();
+            if (now - lastPostTime >= THROTTLE_MS) {
+              parent.postMessage({
+                pluginMessage: {
+                  type: 'BIO_UPDATE',
+                  data: data
+                }
+              }, '*');
+              lastPostTime = now;
+            }
+          } catch (e) {
+            console.error('[SimData Plugin] Error parsing message:', e);
+          }
+        };
+
+        socket.onclose = (event) => {
+          console.warn('[SimData Plugin] Socket closed. Code:', event.code, 'Reason:', event.reason);
+          statusDot.classList.remove('connected');
+          statusText.textContent = 'Disconnected';
+          scheduleReconnect();
+        };
+
+        socket.onerror = (err) => {
+          console.error('[SimData Plugin] Socket error:', err);
+          statusDot.classList.remove('connected');
+          statusText.textContent = 'Offline';
+        };
+      } catch (err) {
+        console.error('[SimData Plugin] Connection exception:', err);
+        scheduleReconnect();
+      }
+    }
+
+    function scheduleReconnect() {
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      reconnectTimer = setTimeout(connect, 1500);
+    }
+
+    btnSetup.onclick = () => {
+      parent.postMessage({
+        pluginMessage: { type: 'SETUP_VARIABLES' }
+      }, '*');
+    };
+
+    window.onmessage = (event) => {
+      const msg = event.data.pluginMessage;
+      if (!msg) return;
+      if (msg.type === 'SETUP_SUCCESS') {
+        btnSetup.textContent = '✓ Variables Ready in BioData';
+        btnSetup.style.background = '#059669';
+        setTimeout(() => {
+          btnSetup.innerHTML = `
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            Re-sync Bio Variables
+          `;
+          btnSetup.style.background = 'var(--primary)';
+        }, 3000);
+      }
+    };
+
+    connect();
+  </script>
+</body>
+</html>

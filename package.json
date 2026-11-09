@@ -1,0 +1,91 @@
+{
+  "name": "simdata",
+  "version": "1.0.0",
+  "description": "SimData - Biofeedback & Neurofeedback Simulator & Bridge for Interaction Design",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "vite",
+    "dev:server": "node server/standalone.js",
+    "build": "vite build && npm run build:figma",
+    "build:figma": "tsc -p figma-plugin/tsconfig.json && cd figma-plugin && zip -FSr simdata-figma-plugin.zip manifest.json ui.html code.js",
+    "test": "node tests/simdata.test.js",
+    "start": "node server/standalone.js",
+    "electron": "electron .",
+    "electron:dev": "concurrently -k \"npm run dev\" \"electron .\"",
+    "dist:dir": "npm run build && electron-builder --dir",
+    "dist": "npm run build && electron-builder",
+    "dist:mac": "npm run build && electron-builder --mac",
+    "dist:win": "npm run build && electron-builder --win",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "biofeedback",
+    "neurofeedback",
+    "eeg",
+    "osc",
+    "websocket",
+    "figma-plugin",
+    "interaction-design",
+    "hrv"
+  ],
+  "author": "SimBio Team",
+  "license": "MIT",
+  "dependencies": {
+    "@radix-ui/react-dialog": "^1.3.1",
+    "@radix-ui/react-progress": "^1.2.1",
+    "@radix-ui/react-slider": "^1.6.1",
+    "@radix-ui/react-switch": "^1.4.1",
+    "@radix-ui/react-tabs": "^1.2.1",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.16.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "simplex-noise": "^4.0.3",
+    "tailwind-merge": "^3.7.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@figma/plugin-typings": "^1.106.0",
+    "@types/node": "^22.10.2",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@types/ws": "^8.5.13",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
+    "concurrently": "^9.1.0",
+    "electron": "^33.2.1",
+    "electron-builder": "^26.18.0",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.16",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.3"
+  },
+  "build": {
+    "appId": "com.simdata.app",
+    "productName": "SimData",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "server/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    }
+  }
+}

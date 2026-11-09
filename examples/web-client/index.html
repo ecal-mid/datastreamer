@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SimBio Minimal Web Client Example</title>
+  <style>
+    body {
+      background: #090d16;
+      color: #e2e8f0;
+      font-family: -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .orb {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #38bdf8 0%, #0369a1 70%, transparent 100%);
+      box-shadow: 0 0 40px #38bdf866;
+      transition: transform 0.1s ease-out;
+      margin-bottom: 30px;
+    }
+    .hud {
+      background: #111827;
+      padding: 16px 24px;
+      border-radius: 12px;
+      border: 1px solid #1f2937;
+      font-family: monospace;
+      font-size: 14px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 24px;
+    }
+    .hud span { color: #38bdf8; font-weight: bold; }
+    .status { margin-bottom: 20px; font-size: 13px; color: #9ca3af; font-family: monospace; }
+  </style>
+</head>
+<body>
+  <h1>SimBio Web Client Demo</h1>
+  <div class="status" id="status">Connecting to ws://127.0.0.1:8080...</div>
+
+  <div class="orb" id="orb"></div>
+
+  <div class="hud">
+    <div>BPM: <span id="bpm">--</span></div>
+    <div>Coherence: <span id="coherence">--</span></div>
+    <div>Respiration: <span id="resp">--</span></div>
+    <div>Alpha Power: <span id="alpha">--</span></div>
+  </div>
+
+  <script>
+    const ws = new WebSocket('ws://127.0.0.1:8080');
+    const orb = document.getElementById('orb');
+    const status = document.getElementById('status');
+    const bpmEl = document.getElementById('bpm');
+    const cohEl = document.getElementById('coherence');
+    const respEl = document.getElementById('resp');
+    const alphaEl = document.getElementById('alpha');
+
+    ws.onopen = () => {
+      status.textContent = '🟢 Connected to SimBio ws://127.0.0.1:8080';
+      status.style.color = '#10b981';
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (!data.biometrics) return;
+
+        const bpm = data.biometrics.hrv.bpm;
+        const coherence = data.biometrics.hrv.coherence;
+        const resp = data.biometrics.respiration.value;
+        const alpha = data.biometrics.eeg.alpha;
+
+        bpmEl.textContent = bpm.toFixed(1);
+        cohEl.textContent = coherence.toFixed(2);
+        respEl.textContent = resp.toFixed(2);
+        alphaEl.textContent = alpha.toFixed(2);
+
+        // Modulate orb size with respiration (0.8x to 1.6x)
+        const scale = 0.8 + resp * 0.8;
+        orb.style.transform = `scale(${scale})`;
+      } catch (e) {}
+    };
+
+    ws.onclose = () => {
+      status.textContent = '🔴 Disconnected from SimBio';
+      status.style.color = '#ef4444';
+    };
+  </script>
+</body>
+</html>
+
