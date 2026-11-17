@@ -217,7 +217,12 @@ The companion Figma plugin binds live biometric telemetry directly into native F
 
 ---
 
-## Creative Coding Integrations
+## Creative Coding & Motion Design Integrations
+
+### Adobe After Effects (Motion Graphics & UI Case Studies)
+* **Data-Driven Animation**: Export a session as CSV via the top header **`CSV`** button.
+* **1:1 Frame Sync**: Set your After Effects composition to **`30 fps`** to match SimData's 30 Hz tick rate.
+* **Native Expressions & ExtendScript Baker**: See [After Effects Integration Guide](examples/after-effects/README.md) for ready-to-use expression recipes (respiration scale, BPM counter, calm color shifts) and a keyframe baking script.
 
 ### TouchDesigner
 * **WebSocket DAT**: Set Network address to `ws://127.0.0.1:8081` (or `:8080`). Parse JSON with a simple DAT execute script.
