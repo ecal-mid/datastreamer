@@ -27,7 +27,7 @@ SimBio broadcasts biosignals to TouchDesigner using either **OSC (UDP)** or **We
 1. Add a **`WebSocket DAT`** (press `TAB` > DAT > `WebSocket`).
 2. Set parameters:
    * **Network Address:** `127.0.0.1`
-   * **Network Port:** `8080`
+   * **Network Port:** `8081` (or `8080`)
    * **Active:** `On`
 3. Add a **`DAT Execute`** or edit the callback in `websocket1_callbacks`:
 

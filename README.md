@@ -3,7 +3,7 @@
 **SimData** is a lightweight, zero-configuration desktop application and companion Figma plugin designed for interaction design students, creative technologists, and researchers prototyping adaptive biofeedback and neurofeedback interfaces without physical biometric sensors.
 
 Built with **shadcn/ui** and Tailwind CSS, SimData generates and broadcasts physiologically plausible real-time biosignals at **30 Hz** simultaneously across two network protocols:
-1. **WebSocket (`ws://127.0.0.1:8080`)** — Structured JSON stream for web prototypes, Figma, and TouchDesigner `WebSocket DAT`.
+1. **WebSocket (`ws://127.0.0.1:8081` / `:8080`)** — Structured JSON stream for web prototypes, Figma, and TouchDesigner `WebSocket DAT`.
 2. **Open Sound Control via UDP (`127.0.0.1:9000`)** — Semantic OSC message tree for Max/MSP, Pure Data, SuperCollider, and TouchDesigner `OSC In CHOP`.
 3. **Dedicated Figma Plugin (`/figma-plugin`)** — Auto-provisions native Figma Variables in a `BioData` collection and updates them via a **10 Hz throttled link** to prevent Figma canvas freezes.
 
@@ -25,7 +25,7 @@ Built with **shadcn/ui** and Tailwind CSS, SimData generates and broadcasts phys
 │                              │                              │
 │        ┌─────────────────────┴─────────────────────┐        │
 │        ▼                                           ▼        │
-│  WebSocket Server (:8080)                 OSC UDP Client (:9000)
+│  WebSocket Server (:8081/:8080)           OSC UDP Client (:9000)
 │  (JSON Payloads)                          (Semantic Address Tree)
 └────────┬───────────────────────────────────────────┬────────┘
          │                                           │
@@ -52,10 +52,10 @@ npm run build
 
 ### 2. Launch SimData Bridge (Web & CLI)
 ```bash
-# Starts the background 30Hz simulation engine, WebSocket server (:8080), OSC UDP (:9000), and Web UI
+# Starts the background 30Hz simulation engine, WebSocket server (:8081), OSC UDP (:9000), and Web UI
 npm start
 ```
-Open **`http://127.0.0.1:8080`** in any web browser, or run in development mode:
+Open **`http://127.0.0.1:8081`** in any web browser, or run in development mode:
 ```bash
 npm run dev
 ```
@@ -64,7 +64,7 @@ npm run dev
 
 #### A. Run the Desktop App (Development)
 ```bash
-# Run the built app in Electron window with background BioBridge (:8080 & :9000)
+# Run the built app in Electron window with background BioBridge (:8081 & :9000)
 npm run electron
 
 # Or run with live Vite HMR (Hot Module Replacement)
@@ -138,7 +138,7 @@ Load pre-bundled session recordings from `assets/recordings/`:
 
 ## Network Protocols & Payloads
 
-### WebSocket Output (`ws://127.0.0.1:8080`)
+### WebSocket Output (`ws://127.0.0.1:8081` or `:8080`)
 Broadcasts at **30 Hz** as stringified JSON:
 ```json
 {
@@ -220,7 +220,7 @@ The companion Figma plugin binds live biometric telemetry directly into native F
 ## Creative Coding Integrations
 
 ### TouchDesigner
-* **WebSocket DAT**: Set Network address to `ws://127.0.0.1:8080`. Parse JSON with a simple DAT execute script.
+* **WebSocket DAT**: Set Network address to `ws://127.0.0.1:8081` (or `:8080`). Parse JSON with a simple DAT execute script.
 * **OSC In CHOP**: Set Network Port to `9000`. Channels `/bio/eeg/*`, `/bio/hrv/*`, `/bio/respiration` appear instantly.
 
 ### Max/MSP & Pure Data

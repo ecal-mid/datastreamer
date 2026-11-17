@@ -40,8 +40,8 @@
   </style>
 </head>
 <body>
-  <h1>SimBio Web Client Demo</h1>
-  <div class="status" id="status">Connecting to ws://127.0.0.1:8080...</div>
+  <h1>SimData Web Client Demo</h1>
+  <div class="status" id="status">Connecting to ws://127.0.0.1:8081...</div>
 
   <div class="orb" id="orb"></div>
 
@@ -53,7 +53,9 @@
   </div>
 
   <script>
-    const ws = new WebSocket('ws://127.0.0.1:8080');
+    const PORTS = [8081, 8080];
+    let portIndex = 0;
+    let ws = null;
     const orb = document.getElementById('orb');
     const status = document.getElementById('status');
     const bpmEl = document.getElementById('bpm');
@@ -61,36 +63,55 @@
     const respEl = document.getElementById('resp');
     const alphaEl = document.getElementById('alpha');
 
-    ws.onopen = () => {
-      status.textContent = '🟢 Connected to SimBio ws://127.0.0.1:8080';
-      status.style.color = '#10b981';
-    };
+    function connect() {
+      const port = PORTS[portIndex];
+      ws = new WebSocket(`ws://127.0.0.1:${port}`);
 
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (!data.biometrics) return;
+      ws.onopen = () => {
+        status.textContent = `🟢 Connected to SimData ws://127.0.0.1:${port}`;
+        status.style.color = '#10b981';
+      };
 
-        const bpm = data.biometrics.hrv.bpm;
-        const coherence = data.biometrics.hrv.coherence;
-        const resp = data.biometrics.respiration.value;
-        const alpha = data.biometrics.eeg.alpha;
+      ws.onclose = () => {
+        portIndex = (portIndex + 1) % PORTS.length;
+        status.textContent = `Retrying on port ${PORTS[portIndex]}...`;
+        setTimeout(connect, 1500);
+      };
 
-        bpmEl.textContent = bpm.toFixed(1);
-        cohEl.textContent = coherence.toFixed(2);
-        respEl.textContent = resp.toFixed(2);
-        alphaEl.textContent = alpha.toFixed(2);
+      ws.onerror = () => {
+        ws.close();
+      };
 
-        // Modulate orb size with respiration (0.8x to 1.6x)
-        const scale = 0.8 + resp * 0.8;
-        orb.style.transform = `scale(${scale})`;
-      } catch (e) {}
-    };
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (!data.biometrics) return;
 
-    ws.onclose = () => {
-      status.textContent = '🔴 Disconnected from SimBio';
-      status.style.color = '#ef4444';
-    };
+          const bpm = data.biometrics.hrv.bpm;
+          const coherence = data.biometrics.hrv.coherence;
+          const resp = data.biometrics.respiration.value;
+          const alpha = data.biometrics.eeg.alpha;
+
+          bpmEl.textContent = bpm.toFixed(1);
+          cohEl.textContent = coherence.toFixed(2);
+          respEl.textContent = resp.toFixed(2);
+          alphaEl.textContent = alpha.toFixed(2);
+
+          // Modulate orb size with respiration (0.8x to 1.6x)
+          const scale = 0.8 + resp * 0.8;
+          orb.style.transform = `scale(${scale})`;
+        } catch (e) {}
+      };
+
+      ws.onclose = () => {
+        status.textContent = `🔴 Disconnected. Retrying port ${PORTS[(portIndex + 1) % PORTS.length]}...`;
+        status.style.color = '#ef4444';
+        portIndex = (portIndex + 1) % PORTS.length;
+        setTimeout(connect, 1500);
+      };
+    }
+
+    connect();
   </script>
 </body>
 </html>
