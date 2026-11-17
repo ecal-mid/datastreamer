@@ -70,26 +70,35 @@ export const Oscilloscope: React.FC<OscilloscopeProps> = ({ telemetry, isPaused 
     if (ecgHistory.current.length > 200) ecgHistory.current.shift();
 
     // 3. Synthesize Composite EEG Brainwave trace
-    const { alpha, beta, theta, delta, gamma } = telemetry.biometrics.eeg;
+    const eegData = telemetry.biometrics?.eeg || ({} as any);
+    const alpha = typeof eegData.alpha === 'number' ? eegData.alpha : 0.5;
+    const beta = typeof eegData.beta === 'number' ? eegData.beta : 0.25;
+    const theta = typeof eegData.theta === 'number' ? eegData.theta : 0.35;
+    const delta = typeof eegData.delta === 'number' ? eegData.delta : 0.25;
+    const gamma = typeof eegData.gamma === 'number' ? eegData.gamma : 0.1;
+    const smr = typeof eegData.smr === 'number' ? eegData.smr : 0.45;
+
     const dt = (1 / 30) * speed;
-    eegPhase.current += dt;
+    eegPhase.current = (eegPhase.current + dt) % 1000.0;
     const t = eegPhase.current;
 
     // Real-time composite brain rhythm (Alpha 10Hz, Beta 18Hz, Theta 6Hz, Gamma 35Hz, Delta 2Hz)
     let eegPoint = 0.5;
-    eegPoint += Math.sin(2 * Math.PI * 10 * t) * (alpha * 0.22);
-    eegPoint += Math.sin(2 * Math.PI * 18 * t) * (beta * 0.12);
+    eegPoint += Math.sin(2 * Math.PI * 10 * t) * (alpha * 0.24);
+    eegPoint += Math.sin(2 * Math.PI * 18 * t) * (beta * 0.14);
     eegPoint += Math.sin(2 * Math.PI * 5.5 * t) * (theta * 0.18);
+    eegPoint += Math.sin(2 * Math.PI * 13.5 * t) * (smr * 0.10);
     eegPoint += Math.sin(2 * Math.PI * 34 * t) * (gamma * 0.06);
     eegPoint += Math.sin(2 * Math.PI * 2 * t) * (delta * 0.14);
     eegPoint += (Math.random() - 0.5) * 0.04; // Micro neural noise
 
     // High-amplitude artifact surge (e.g. eye blink / EMG clench)
-    if (telemetry.states.artifact_flag) {
+    if (telemetry.states?.artifact_flag) {
       eegPoint += Math.sin(t * 35) * 0.35 + (Math.random() - 0.5) * 0.25;
     }
 
-    // Clamp within 0.05 - 0.95
+    // Protect against NaN
+    if (isNaN(eegPoint)) eegPoint = 0.5;
     eegPoint = Math.max(0.05, Math.min(0.95, eegPoint));
     eegHistory.current.push(eegPoint);
     if (eegHistory.current.length > 200) eegHistory.current.shift();
@@ -152,7 +161,8 @@ export const Oscilloscope: React.FC<OscilloscopeProps> = ({ telemetry, isPaused 
 
         const dx = width / (buf.length - 1);
         for (let i = 0; i < buf.length; i++) {
-          const val = buf[i];
+          const rawVal = buf[i];
+          const val = typeof rawVal === 'number' && !isNaN(rawVal) ? rawVal : 0.5;
           const y = topY + chH - 8 - val * (chH - 16);
           const x = i * dx;
           if (i === 0) ctx.moveTo(x, y);

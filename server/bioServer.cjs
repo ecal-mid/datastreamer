@@ -613,6 +613,7 @@ function startSimDataServer(options = {}) {
           theta: telemetry.biometrics.eeg.theta,
           smr: telemetry.biometrics.eeg.smr,
           gamma: telemetry.biometrics.eeg.gamma,
+          delta: telemetry.biometrics.eeg.delta,
         },
         hrv: {
           bpm: telemetry.biometrics.hrv.bpm,
