@@ -173,6 +173,11 @@ class SimulationEngine {
     this.mode = mode;
   }
 
+  setPlaybackFrame(frame) {
+    this.mode = 'playback';
+    this.lastFrame = frame;
+  }
+
   setPaused(paused) {
     this.isPaused = Boolean(paused);
   }
@@ -630,6 +635,9 @@ function startSimDataServer(options = {}) {
         } else if (payload.type === 'SET_SPEED') {
           engine.setSpeed(payload.speed);
           broadcastControlState();
+        } else if (payload.type === 'PLAYBACK_FRAME' && payload.frame) {
+          engine.setPlaybackFrame(payload.frame);
+          broadcastTelemetry(payload.frame, ws);
         }
       } catch (err) {
         // Ignore malformed messages
@@ -637,78 +645,71 @@ function startSimDataServer(options = {}) {
     });
   });
 
-  // 30 Hz Simulation Loop
-  const timer = setInterval(() => {
-    const telemetry = engine.tick(1 / TICK_RATE_HZ);
+  function broadcastTelemetry(telemetry, originWs = null) {
+    if (!telemetry || !telemetry.biometrics) return;
 
-    // 1. Prepare JSON payload matching specification:
-    // Notice respiration.value in JSON is 0.0 - 1.0, while rawSin is -1.0 to 1.0 for OSC
-    const respSin = telemetry.biometrics.respiration.rawSin ?? 0;
+    // Respiration rawSin for OSC (-1.0 to 1.0)
+    let respSin = 0;
+    if (typeof telemetry.biometrics.respiration?.rawSin === 'number') {
+      respSin = telemetry.biometrics.respiration.rawSin;
+    } else if (typeof telemetry.biometrics.respiration?.value === 'number') {
+      respSin = (telemetry.biometrics.respiration.value * 2) - 1;
+    }
+
     const jsonPayload = {
-      timestamp: telemetry.timestamp,
-      mode: telemetry.mode,
+      timestamp: telemetry.timestamp || Date.now(),
+      mode: telemetry.mode || engine.mode,
       biometrics: {
         eeg: {
-          alpha: telemetry.biometrics.eeg.alpha,
-          beta: telemetry.biometrics.eeg.beta,
-          theta: telemetry.biometrics.eeg.theta,
-          smr: telemetry.biometrics.eeg.smr,
-          gamma: telemetry.biometrics.eeg.gamma,
-          delta: telemetry.biometrics.eeg.delta,
+          alpha: telemetry.biometrics.eeg?.alpha ?? 0.5,
+          beta: telemetry.biometrics.eeg?.beta ?? 0.3,
+          theta: telemetry.biometrics.eeg?.theta ?? 0.35,
+          smr: telemetry.biometrics.eeg?.smr ?? 0.45,
+          gamma: telemetry.biometrics.eeg?.gamma ?? 0.1,
+          delta: telemetry.biometrics.eeg?.delta ?? 0.25,
         },
         hrv: {
-          bpm: telemetry.biometrics.hrv.bpm,
-          rmssd: telemetry.biometrics.hrv.rmssd,
-          coherence: telemetry.biometrics.hrv.coherence,
+          bpm: telemetry.biometrics.hrv?.bpm ?? 70,
+          rmssd: telemetry.biometrics.hrv?.rmssd ?? 50,
+          coherence: telemetry.biometrics.hrv?.coherence ?? 0.5,
         },
         respiration: {
-          phase: telemetry.biometrics.respiration.phase,
-          value: telemetry.biometrics.respiration.value,
+          phase: telemetry.biometrics.respiration?.phase ?? 'inhale',
+          value: telemetry.biometrics.respiration?.value ?? 0.5,
         },
         eda: {
-          tonic: telemetry.biometrics.eda.tonic,
-          phasic: telemetry.biometrics.eda.phasic,
+          tonic: telemetry.biometrics.eda?.tonic ?? 5.0,
+          phasic: telemetry.biometrics.eda?.phasic ?? 0.0,
         }
       },
       states: {
-        calm_index: telemetry.states.calm_index,
-        focus_index: telemetry.states.focus_index,
-        artifact_flag: telemetry.states.artifact_flag,
+        calm_index: telemetry.states?.calm_index ?? 0.5,
+        focus_index: telemetry.states?.focus_index ?? 0.5,
+        artifact_flag: Boolean(telemetry.states?.artifact_flag),
       }
     };
 
     const strJson = JSON.stringify(jsonPayload);
 
-    // Broadcast to all active WebSocket clients
+    // Broadcast to all active WebSocket clients (optionally excluding the origin sender)
     for (const client of wss.clients) {
-      if (client.readyState === WebSocket.OPEN) {
+      if (client !== originWs && client.readyState === WebSocket.OPEN) {
         client.send(strJson);
       }
     }
 
-    // 2. Transmit OSC UDP packets to 127.0.0.1:9000
-    // Semantic Address Tree:
-    // /bio/eeg/alpha [float 0.0 - 1.0]
-    // /bio/eeg/beta [float 0.0 - 1.0]
-    // /bio/eeg/theta [float 0.0 - 1.0]
-    // /bio/eeg/smr [float 0.0 - 1.0]
-    // /bio/hrv/bpm [float]
-    // /bio/hrv/coherence [float 0.0 - 1.0]
-    // /bio/respiration [float -1.0 to 1.0]
-    // /bio/eda/phasic [float]
-    // /bio/state/calm [float 0.0 - 1.0]
-    // /bio/artifact [int 0 or 1]
+    // Transmit OSC UDP packets to 127.0.0.1:9000
     const oscMessages = [
-      encodeOscMessage('/bio/eeg/alpha', [{ type: 'f', value: telemetry.biometrics.eeg.alpha }]),
-      encodeOscMessage('/bio/eeg/beta', [{ type: 'f', value: telemetry.biometrics.eeg.beta }]),
-      encodeOscMessage('/bio/eeg/theta', [{ type: 'f', value: telemetry.biometrics.eeg.theta }]),
-      encodeOscMessage('/bio/eeg/smr', [{ type: 'f', value: telemetry.biometrics.eeg.smr }]),
-      encodeOscMessage('/bio/hrv/bpm', [{ type: 'f', value: telemetry.biometrics.hrv.bpm }]),
-      encodeOscMessage('/bio/hrv/coherence', [{ type: 'f', value: telemetry.biometrics.hrv.coherence }]),
+      encodeOscMessage('/bio/eeg/alpha', [{ type: 'f', value: jsonPayload.biometrics.eeg.alpha }]),
+      encodeOscMessage('/bio/eeg/beta', [{ type: 'f', value: jsonPayload.biometrics.eeg.beta }]),
+      encodeOscMessage('/bio/eeg/theta', [{ type: 'f', value: jsonPayload.biometrics.eeg.theta }]),
+      encodeOscMessage('/bio/eeg/smr', [{ type: 'f', value: jsonPayload.biometrics.eeg.smr }]),
+      encodeOscMessage('/bio/hrv/bpm', [{ type: 'f', value: jsonPayload.biometrics.hrv.bpm }]),
+      encodeOscMessage('/bio/hrv/coherence', [{ type: 'f', value: jsonPayload.biometrics.hrv.coherence }]),
       encodeOscMessage('/bio/respiration', [{ type: 'f', value: respSin }]),
-      encodeOscMessage('/bio/eda/phasic', [{ type: 'f', value: telemetry.biometrics.eda.phasic }]),
-      encodeOscMessage('/bio/state/calm', [{ type: 'f', value: telemetry.states.calm_index }]),
-      encodeOscMessage('/bio/artifact', [{ type: 'i', value: telemetry.states.artifact_flag ? 1 : 0 }]),
+      encodeOscMessage('/bio/eda/phasic', [{ type: 'f', value: jsonPayload.biometrics.eda.phasic }]),
+      encodeOscMessage('/bio/state/calm', [{ type: 'f', value: jsonPayload.states.calm_index }]),
+      encodeOscMessage('/bio/artifact', [{ type: 'i', value: jsonPayload.states.artifact_flag ? 1 : 0 }]),
     ];
 
     for (const msgBuf of oscMessages) {
@@ -716,6 +717,18 @@ function startSimDataServer(options = {}) {
         if (!err) oscPacketCount++;
       });
     }
+  }
+
+  // 30 Hz Simulation Loop
+  const timer = setInterval(() => {
+    // When in playback mode, do not generate synthetic RSA/Perlin noise;
+    // frames are streamed by the active playback player via PLAYBACK_FRAME
+    if (engine.mode === 'playback') {
+      return;
+    }
+
+    const telemetry = engine.tick(1 / TICK_RATE_HZ);
+    broadcastTelemetry(telemetry);
   }, TICK_INTERVAL_MS);
 
   server.listen(wsPort, () => {

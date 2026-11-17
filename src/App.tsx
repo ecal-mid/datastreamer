@@ -72,6 +72,11 @@ export const App: React.FC = () => {
   // App States
   const [telemetry, setTelemetry] = useState<SimDataTelemetry>(INITIAL_TELEMETRY);
   const [activeTab, setActiveTab] = useState<'presets' | 'puppeteer' | 'playback'>('presets');
+  const activeTabRef = useRef<'presets' | 'puppeteer' | 'playback'>('presets');
+
+  useEffect(() => {
+    activeTabRef.current = activeTab;
+  }, [activeTab]);
   const [activePreset, setActivePreset] = useState<PresetArchetype>('baseline');
   const [activeArtifact, setActiveArtifact] = useState<ArtifactType>('none');
   const [overrides, setOverrides] = useState<ManualOverrides>(localEngine.current.getOverrides());
@@ -153,6 +158,12 @@ export const App: React.FC = () => {
                 datasetPlayer.current.setSpeed(data.speed);
               }
             } else if (data.biometrics) {
+              // When in playback tab, the local dataset player owns the telemetry.
+              // Ignore synthetic generator frames coming from WebSocket.
+              if (activeTabRef.current === 'playback') {
+                return;
+              }
+
               setTelemetry(data);
               setOscPackets((prev) => prev + 10);
 
@@ -259,6 +270,18 @@ export const App: React.FC = () => {
           setPlaybackState(datasetPlayer.current.getState());
           sessionHistory.current.push(frame);
           if (sessionHistory.current.length > 900) sessionHistory.current.shift();
+
+          // Stream the playback frame to backend server so OSC :9000 & Figma stay synchronized
+          sendControlMessage({ type: 'PLAYBACK_FRAME', frame });
+
+          if (sonification.current.getIsEnabled() && !isPaused) {
+            sonification.current.update(
+              frame.biometrics.hrv.bpm,
+              frame.biometrics.respiration.value,
+              frame.biometrics.respiration.phase,
+              0.5
+            );
+          }
         }
       } else if (!wsConnected) {
         const frame = localEngine.current.tick(1 / 30);
@@ -282,9 +305,20 @@ export const App: React.FC = () => {
 
   const handleTabChange = (tab: 'presets' | 'puppeteer' | 'playback') => {
     setActiveTab(tab);
+    activeTabRef.current = tab;
     const mode: OperatingMode = tab === 'playback' ? 'playback' : tab === 'presets' ? 'preset' : 'generative';
     localEngine.current.setMode(mode);
     sendControlMessage({ type: 'SET_MODE', mode });
+
+    // When switching to playback tab, immediately display current dataset frame
+    if (tab === 'playback') {
+      const cur = datasetPlayer.current.getCurrentFrame();
+      if (cur) {
+        setTelemetry(cur);
+        setPlaybackState(datasetPlayer.current.getState());
+        sendControlMessage({ type: 'PLAYBACK_FRAME', frame: cur });
+      }
+    }
   };
 
   const handleSelectPreset = (preset: PresetArchetype) => {
@@ -384,6 +418,11 @@ export const App: React.FC = () => {
         datasetPlayer.current.loadCsv(name, cached);
       }
       setPlaybackState(datasetPlayer.current.getState());
+      const cur = datasetPlayer.current.getCurrentFrame();
+      if (cur) {
+        setTelemetry(cur);
+        sendControlMessage({ type: 'PLAYBACK_FRAME', frame: cur });
+      }
       return;
     }
 
@@ -398,6 +437,11 @@ export const App: React.FC = () => {
           datasetPlayer.current.loadCsv(name, csvText);
         }
         setPlaybackState(datasetPlayer.current.getState());
+        const cur = datasetPlayer.current.getCurrentFrame();
+        if (cur) {
+          setTelemetry(cur);
+          sendControlMessage({ type: 'PLAYBACK_FRAME', frame: cur });
+        }
       }
     } catch (e) {}
   };
@@ -434,6 +478,11 @@ export const App: React.FC = () => {
   const handleSeek = (progress: number) => {
     datasetPlayer.current.seekNormalized(progress);
     setPlaybackState(datasetPlayer.current.getState());
+    const cur = datasetPlayer.current.getCurrentFrame();
+    if (cur) {
+      setTelemetry(cur);
+      sendControlMessage({ type: 'PLAYBACK_FRAME', frame: cur });
+    }
   };
 
   const handleDownloadDataset = (name: string) => {
