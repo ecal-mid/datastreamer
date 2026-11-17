@@ -13,7 +13,7 @@ const { WebSocketServer, WebSocket } = require('ws');
 const { encodeOscMessage } = require('./oscEncoder.cjs');
 
 // Port configurations
-const WS_PORT = 8080;
+const WS_PORT = Number(process.env.PORT || process.env.WS_PORT) || 8081;
 const OSC_HOST = '127.0.0.1';
 const OSC_PORT = 9000;
 const TICK_RATE_HZ = 30;

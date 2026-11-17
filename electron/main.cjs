@@ -6,9 +6,12 @@ let mainWindow = null;
 let bioBridge = null;
 
 function createWindow() {
-  // Start the background BioEngine WebSocket (:8080) & OSC UDP (:9000) server
+  const wsPort = Number(process.env.PORT || process.env.WS_PORT) || 8081;
+  const oscPort = Number(process.env.OSC_PORT) || 9000;
+
+  // Start the background BioEngine WebSocket & OSC UDP server
   try {
-    bioBridge = startSimDataServer({ wsPort: 8080, oscPort: 9000 });
+    bioBridge = startSimDataServer({ wsPort, oscPort });
   } catch (err) {
     console.error('[SimData] Failed to start internal bridge server:', err);
   }

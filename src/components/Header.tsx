@@ -18,6 +18,7 @@ import { Badge } from './ui/badge';
 interface HeaderProps {
   wsConnected: boolean;
   wsClientsCount: number;
+  wsPort?: number;
   oscTarget: string;
   oscPackets: number;
   fps: number;
@@ -36,6 +37,7 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   wsConnected,
   wsClientsCount,
+  wsPort = 8081,
   oscTarget,
   oscPackets,
   fps,
@@ -125,7 +127,7 @@ export const Header: React.FC<HeaderProps> = ({
             }`}
           />
           <Radio className="w-3 h-3" />
-          <span>WS :8080</span>
+          <span>WS :{wsPort}</span>
           <span className="opacity-70">({wsClientsCount})</span>
         </Badge>
 

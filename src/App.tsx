@@ -40,6 +40,28 @@ const INITIAL_TELEMETRY: SimDataTelemetry = {
   }
 };
 
+function getTargetHost(): string {
+  if (typeof window !== 'undefined' && window.location) {
+    const port = window.location.port;
+    if (port && port !== '5173') {
+      return `${window.location.hostname}:${port}`;
+    }
+  }
+  return '127.0.0.1:8081';
+}
+
+function getWsUrl(): string {
+  const host = getTargetHost();
+  const protocol = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  return `${protocol}//${host}`;
+}
+
+function getHttpBaseUrl(): string {
+  const host = getTargetHost();
+  const protocol = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'https:' : 'http:';
+  return `${protocol}//${host}`;
+}
+
 export const App: React.FC = () => {
   // Engines
   const localEngine = useRef<BioEngine>(new BioEngine());
@@ -61,6 +83,7 @@ export const App: React.FC = () => {
   // Network Bridge States
   const [wsConnected, setWsConnected] = useState<boolean>(false);
   const [wsClientsCount, setWsClientsCount] = useState<number>(0);
+  const [wsPort, setWsPort] = useState<number>(8081);
   const [oscPackets, setOscPackets] = useState<number>(0);
   const socketRef = useRef<WebSocket | null>(null);
 
@@ -87,13 +110,13 @@ export const App: React.FC = () => {
     }
   };
 
-  // Connect to backend ws://127.0.0.1:8080
+  // Connect to backend WebSocket
   useEffect(() => {
     let reconnectTimeout: any;
 
     const connectWs = () => {
       try {
-        const ws = new WebSocket('ws://127.0.0.1:8080');
+        const ws = new WebSocket(getWsUrl());
         socketRef.current = ws;
 
         ws.onopen = () => {
@@ -105,6 +128,7 @@ export const App: React.FC = () => {
             const data = JSON.parse(event.data);
             if (data.type === 'SIMDATA_INIT' || data.type === 'SIMBIO_INIT') {
               setWsConnected(true);
+              if (data.ports?.ws) setWsPort(data.ports.ws);
               if (typeof data.isPaused === 'boolean') {
                 setIsPaused(data.isPaused);
                 localEngine.current.setPaused(data.isPaused);
@@ -169,10 +193,11 @@ export const App: React.FC = () => {
   useEffect(() => {
     const fetchStatus = async () => {
       try {
-        const res = await fetch('http://127.0.0.1:8080/status');
+        const res = await fetch(`${getHttpBaseUrl()}/status`);
         if (res.ok) {
           const json = await res.json();
           setWsClientsCount(json.clientsCount || 0);
+          if (json.wsPort) setWsPort(json.wsPort);
           if (json.oscPacketCount) setOscPackets(json.oscPacketCount);
           if (typeof json.isPaused === 'boolean') {
             setIsPaused(json.isPaused);
@@ -195,7 +220,7 @@ export const App: React.FC = () => {
   useEffect(() => {
     const loadDefaultDataset = async () => {
       try {
-        const res = await fetch('http://127.0.0.1:8080/api/recordings/meditation_deep_flow.json');
+        const res = await fetch(`${getHttpBaseUrl()}/api/recordings/meditation_deep_flow.json`);
         if (res.ok) {
           const data = await res.json();
           datasetPlayer.current.loadJson('meditation_deep_flow.json', data);
@@ -332,7 +357,7 @@ export const App: React.FC = () => {
   const handleSelectDataset = async (name: string) => {
     setSelectedDataset(name);
     try {
-      const res = await fetch(`http://127.0.0.1:8080/api/recordings/${name}`);
+      const res = await fetch(`${getHttpBaseUrl()}/api/recordings/${name}`);
       if (res.ok) {
         if (name.endsWith('.json')) {
           const json = await res.json();
@@ -394,6 +419,7 @@ export const App: React.FC = () => {
       <Header
         wsConnected={wsConnected}
         wsClientsCount={wsClientsCount}
+        wsPort={wsPort}
         oscTarget="127.0.0.1:9000"
         oscPackets={oscPackets}
         fps={30}

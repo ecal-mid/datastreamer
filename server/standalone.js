@@ -10,13 +10,15 @@ console.log('=====================================================');
 console.log('  SIMDATA — Biofeedback & Neurofeedback Simulator    ');
 console.log('=====================================================');
 
+const wsPort = Number(process.env.PORT || process.env.WS_PORT) || 8081;
+
 const bridge = startSimDataServer({
-  wsPort: 8080,
+  wsPort,
   oscPort: 9000,
   oscHost: '127.0.0.1'
 });
 
-console.log('🌐 Web UI & WebSocket:  http://127.0.0.1:8080');
+console.log(`🌐 Web UI & WebSocket:  http://127.0.0.1:${wsPort}`);
 console.log('📡 OSC Output (UDP):    127.0.0.1:9000');
 console.log('🎨 Figma Plugin:        ./figma-plugin/manifest.json');
 console.log('⏱️  Tick Rate:           30 Hz internal ticker');

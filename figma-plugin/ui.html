@@ -245,7 +245,8 @@
   </div>
 
   <script>
-    const WS_URL = 'ws://localhost:8080';
+    const PORTS = [8081, 8080];
+    let portIndex = 0;
     let socket = null;
     let reconnectTimer = null;
 
@@ -264,14 +265,16 @@
     const btnSetup = document.getElementById('btnSetup');
 
     function connect() {
+      const activePort = PORTS[portIndex];
+      const wsUrl = 'ws://localhost:' + activePort;
       try {
-        console.log('[SimData Plugin] Connecting to ' + WS_URL + '...');
-        socket = new WebSocket(WS_URL);
+        console.log('[SimData Plugin] Connecting to ' + wsUrl + '...');
+        socket = new WebSocket(wsUrl);
 
         socket.onopen = () => {
-          console.log('[SimData Plugin] Connected to WebSocket!');
+          console.log('[SimData Plugin] Connected to WebSocket on port ' + activePort + '!');
           statusDot.classList.add('connected');
-          statusText.textContent = 'ws:8080 Live';
+          statusText.textContent = 'ws:' + activePort + ' Live';
         };
 
         socket.onmessage = (event) => {
@@ -312,19 +315,18 @@
         };
 
         socket.onclose = (event) => {
-          console.warn('[SimData Plugin] Socket closed. Code:', event.code, 'Reason:', event.reason);
           statusDot.classList.remove('connected');
-          statusText.textContent = 'Disconnected';
+          statusText.textContent = 'Reconnecting...';
+          portIndex = (portIndex + 1) % PORTS.length;
           scheduleReconnect();
         };
 
         socket.onerror = (err) => {
-          console.error('[SimData Plugin] Socket error:', err);
           statusDot.classList.remove('connected');
-          statusText.textContent = 'Offline';
+          statusText.textContent = 'Searching port ' + PORTS[portIndex] + '...';
         };
       } catch (err) {
-        console.error('[SimData Plugin] Connection exception:', err);
+        portIndex = (portIndex + 1) % PORTS.length;
         scheduleReconnect();
       }
     }
