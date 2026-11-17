@@ -1,9 +1,20 @@
-const { app, BrowserWindow, shell } = require('electron');
+const { app, BrowserWindow, shell, ipcMain } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const { startSimDataServer } = require('../server/bioServer.cjs');
 
 let mainWindow = null;
 let bioBridge = null;
+
+// Handle opening recordings folder in native file manager
+ipcMain.handle('open-recordings-folder', async () => {
+  const recDir = path.join(__dirname, '..', 'assets', 'recordings');
+  if (!fs.existsSync(recDir)) {
+    fs.mkdirSync(recDir, { recursive: true });
+  }
+  await shell.openPath(recDir);
+  return true;
+});
 
 function createWindow() {
   const wsPort = Number(process.env.PORT || process.env.WS_PORT) || 8081;

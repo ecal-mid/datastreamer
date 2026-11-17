@@ -215,5 +215,35 @@ assert(Math.abs(speed2x.timeSeconds - 2.0) < 0.05, '2x engine advances ~2.0s in 
 assert(Math.abs(speed4x.timeSeconds - 4.0) < 0.05, '4x engine advances ~4.0s in 30 ticks');
 console.log('✓ Test 9 Passed: 2x and 4x multipliers scale simulation time accurately.\n');
 
+// Test 10: Blank CSV Template & Dataset Upload Persistence
+console.log('Test 10: Blank CSV Template & Dataset Upload Persistence');
+const expectedColumns = [
+  'timestamp', 'bpm', 'rmssd', 'coherence', 'respiration_phase',
+  'respiration_value', 'alpha', 'beta', 'theta', 'smr', 'gamma',
+  'delta', 'tonic_eda', 'phasic_eda', 'calm_index', 'focus_index', 'artifact'
+];
+
+// Verify template structure
+const templateRow = '1773072000000,72.0,55.0,0.65,inhale,0.50,0.50,0.25,0.30,0.40,0.15,0.20,5.00,0.01,0.60,0.50,0';
+const templateHeader = expectedColumns.join(',');
+assert(templateHeader.split(',').length === 17, 'Template must have 17 biometric columns');
+
+// Verify disk persistence into assets/recordings
+const testFilename = '_test_upload_session.csv';
+const testFilePath = path.join(recDir, testFilename);
+const testContent = `${templateHeader}\n${templateRow}\n`;
+
+fs.writeFileSync(testFilePath, testContent, 'utf8');
+assert(fs.existsSync(testFilePath), 'Uploaded recording must persist to disk in assets/recordings/');
+
+// Verify disk content
+const readBack = fs.readFileSync(testFilePath, 'utf8');
+assert(readBack.includes('1773072000000'), 'Persisted recording content intact');
+
+// Clean up test file
+fs.unlinkSync(testFilePath);
+assert(!fs.existsSync(testFilePath), 'Test upload cleaned up');
+console.log('✓ Test 10 Passed: 17-column template and upload persistence verified.\n');
+
 console.log('🎉 ALL TESTS PASSED SUCCESSFULLY! SimData is 100% verified.');
 

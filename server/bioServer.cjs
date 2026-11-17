@@ -429,7 +429,7 @@ function startSimDataServer(options = {}) {
       }
     }
 
-    if (req.url === '/api/recordings') {
+    if (req.url === '/api/recordings' && req.method === 'GET') {
       const recDir = path.join(__dirname, '..', 'assets', 'recordings');
       let files = [];
       try {
@@ -440,6 +440,61 @@ function startSimDataServer(options = {}) {
       return;
     }
 
+    // Upload a custom recording file (JSON or CSV)
+    if (req.url === '/api/recordings' && req.method === 'POST') {
+      let body = '';
+      req.on('data', chunk => {
+        body += chunk;
+        if (body.length > 25 * 1024 * 1024) {
+          res.writeHead(413, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Payload too large (max 25MB)' }));
+          req.destroy();
+        }
+      });
+      req.on('end', () => {
+        try {
+          const parsed = JSON.parse(body);
+          let rawName = parsed.filename || `custom_recording_${Date.now()}.csv`;
+          const safeName = path.basename(rawName).replace(/[^a-zA-Z0-9_\-\.]/g, '_');
+          if (!safeName.endsWith('.json') && !safeName.endsWith('.csv')) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'File must have .json or .csv extension' }));
+            return;
+          }
+          const recDir = path.join(__dirname, '..', 'assets', 'recordings');
+          if (!fs.existsSync(recDir)) {
+            fs.mkdirSync(recDir, { recursive: true });
+          }
+          const destPath = path.join(recDir, safeName);
+          fs.writeFileSync(destPath, parsed.content, 'utf8');
+
+          const files = fs.readdirSync(recDir).filter(f => f.endsWith('.json') || f.endsWith('.csv'));
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true, filename: safeName, files }));
+        } catch (err) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Failed to write recording file' }));
+        }
+      });
+      return;
+    }
+
+    // Download standardized blank CSV template
+    if (req.url === '/api/recordings/template.csv') {
+      const templateContent = [
+        'timestamp,bpm,rmssd,coherence,respiration_phase,respiration_value,alpha,beta,theta,smr,gamma,delta,tonic_eda,phasic_eda,calm_index,focus_index,artifact',
+        '1773072000000,72.0,55.0,0.65,inhale,0.50,0.50,0.25,0.30,0.40,0.15,0.20,5.00,0.01,0.60,0.50,0',
+        '1773072000033,72.2,55.1,0.65,inhale,0.55,0.51,0.25,0.30,0.40,0.15,0.20,5.00,0.01,0.60,0.51,0',
+        '1773072000067,72.5,55.2,0.66,inhale,0.60,0.52,0.24,0.30,0.40,0.15,0.20,4.99,0.01,0.61,0.51,0'
+      ].join('\n');
+      res.writeHead(200, {
+        'Content-Type': 'text/csv',
+        'Content-Disposition': 'attachment; filename="simdata_template.csv"'
+      });
+      res.end(templateContent);
+      return;
+    }
+
     // Serve recordings content
     if (req.url.startsWith('/api/recordings/')) {
       const fileName = path.basename(req.url.replace('/api/recordings/', ''));
@@ -447,7 +502,8 @@ function startSimDataServer(options = {}) {
       if (fs.existsSync(filePath)) {
         const content = fs.readFileSync(filePath, 'utf8');
         res.writeHead(200, {
-          'Content-Type': fileName.endsWith('.json') ? 'application/json' : 'text/csv'
+          'Content-Type': fileName.endsWith('.json') ? 'application/json' : 'text/csv',
+          'Content-Disposition': `attachment; filename="${fileName}"`
         });
         res.end(content);
         return;

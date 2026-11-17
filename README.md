@@ -118,13 +118,18 @@ One-click scenarios with **3-second smooth interpolation** toward target archety
 3. `Cognitive Stress / Overload`: Suppressed Alpha ($0.15$), high Beta ($0.85$), irregular respiration, low Coherence ($0.2$), frequent phasic EDA bursts.
 4. `Drowsiness / Hypnagogia`: High Theta ($0.8$), slow shallow breathing, collapsing tonic EDA.
 
-### Mode C: Dataset Playback Engine
-Load pre-bundled session recordings from `assets/recordings/`:
-* `meditation_deep_flow.json` (30s 30Hz JSON recording)
-* `cognitive_stress_overload.json` (30s 30Hz JSON recording)
-* `respiratory_coherence_training.csv` (CSV time-series)
-* `drowsiness_hypnagogia.csv` (CSV time-series)
-* Transport controls: **Play**, **Pause**, **Loop Toggle**, **Scrubber Timeline Bar**, and **Speed Multipliers** (`0.5x`, `1.0x`, `2.0x`, `4.0x`).
+### Mode C: Dataset Playback Engine & Recordings Library
+Load and manage session recordings in `assets/recordings/`:
+* **Pre-bundled Recordings**:
+  * `meditation_deep_flow.json` (30s 30Hz JSON recording)
+  * `cognitive_stress_overload.json` (30s 30Hz JSON recording)
+  * `respiratory_coherence_training.csv` (CSV time-series)
+  * `drowsiness_hypnagogia.csv` (CSV time-series)
+* **Direct File Download**: Click the download icon next to any recording card in the UI to save the raw `.csv` or `.json` file to your computer.
+* **Drag-and-Drop Dataset Upload**: Drop your own `.csv` or `.json` file onto the dropzone. SimData automatically parses the telemetry, starts playing it immediately, and saves it to `assets/recordings/` so it persists across restarts.
+* **Standardized Blank CSV Template**: Click **Blank CSV Template** to download a ready-to-use template with all 17 biometric column headers.
+* **Desktop "Open Folder"**: Click **Open Folder** in the desktop app to reveal `assets/recordings/` natively in macOS Finder.
+* **Transport Controls**: **Play**, **Pause**, **Loop Toggle**, **Scrubber Timeline Bar**, and **Speed Multipliers** (`0.5x`, `1.0x`, `2.0x`, `4.0x`).
 
 ### Manual Overrides & Artifact Injection (Puppeteer Panel)
 * Force any parameter ($0.0\text{–}1.0$) with individual lock toggles or release all.

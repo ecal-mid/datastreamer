@@ -216,8 +216,20 @@ export const App: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Load default dataset
+  // Load available datasets from server and initialize default
   useEffect(() => {
+    const fetchAvailableDatasets = async () => {
+      try {
+        const res = await fetch(`${getHttpBaseUrl()}/api/recordings`);
+        if (res.ok) {
+          const json = await res.json();
+          if (Array.isArray(json.files) && json.files.length > 0) {
+            setAvailableDatasets(json.files);
+          }
+        }
+      } catch (e) {}
+    };
+
     const loadDefaultDataset = async () => {
       try {
         const res = await fetch(`${getHttpBaseUrl()}/api/recordings/meditation_deep_flow.json`);
@@ -228,6 +240,8 @@ export const App: React.FC = () => {
         }
       } catch (e) {}
     };
+
+    fetchAvailableDatasets();
     loadDefaultDataset();
   }, []);
 
@@ -405,6 +419,72 @@ export const App: React.FC = () => {
     setPlaybackState(datasetPlayer.current.getState());
   };
 
+  const handleDownloadDataset = (name: string) => {
+    const url = `${getHttpBaseUrl()}/api/recordings/${name}`;
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = name;
+    link.click();
+  };
+
+  const handleDownloadTemplate = () => {
+    const url = `${getHttpBaseUrl()}/api/recordings/template.csv`;
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'simdata_template.csv';
+    link.click();
+  };
+
+  const handleOpenRecordingsFolder = () => {
+    if (typeof window !== 'undefined' && (window as any).simDataDesktop?.openRecordingsFolder) {
+      (window as any).simDataDesktop.openRecordingsFolder();
+    }
+  };
+
+  const handleUploadDataset = async (file: File): Promise<{ success: boolean; frameCount?: number; error?: string }> => {
+    try {
+      const text = await file.text();
+      let res: { success: boolean; frameCount: number; error?: string };
+
+      if (file.name.endsWith('.json')) {
+        res = datasetPlayer.current.loadJson(file.name, text);
+      } else if (file.name.endsWith('.csv')) {
+        res = datasetPlayer.current.loadCsv(file.name, text);
+      } else {
+        return { success: false, error: 'Only .csv or .json files are supported' };
+      }
+
+      if (!res.success) {
+        return { success: false, error: res.error || 'Failed to parse file' };
+      }
+
+      // Update state in memory immediately
+      setSelectedDataset(file.name);
+      setPlaybackState(datasetPlayer.current.getState());
+
+      // Persist to backend server so it stays across restarts
+      try {
+        const postRes = await fetch(`${getHttpBaseUrl()}/api/recordings`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename: file.name, content: text })
+        });
+        if (postRes.ok) {
+          const json = await postRes.json();
+          if (Array.isArray(json.files)) {
+            setAvailableDatasets(json.files);
+          }
+        }
+      } catch (err) {
+        console.warn('[SimData] Could not persist uploaded recording to server disk:', err);
+      }
+
+      return { success: true, frameCount: res.frameCount };
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Error processing file' };
+    }
+  };
+
   const handleSetSpeed = (speed: number) => {
     setSimSpeed(speed);
     localEngine.current.setSpeed(speed);
@@ -496,6 +576,11 @@ export const App: React.FC = () => {
                 onToggleLoop={handleToggleLoop}
                 onSeek={handleSeek}
                 onSetSpeed={handleSetSpeed}
+                onDownloadDataset={handleDownloadDataset}
+                onUploadDataset={handleUploadDataset}
+                onDownloadTemplate={handleDownloadTemplate}
+                onOpenFolder={handleOpenRecordingsFolder}
+                isDesktop={typeof window !== 'undefined' && Boolean((window as any).simDataDesktop?.isElectron)}
               />
             </TabsContent>
           </Tabs>
