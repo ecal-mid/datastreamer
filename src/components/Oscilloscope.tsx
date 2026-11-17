@@ -82,24 +82,26 @@ export const Oscilloscope: React.FC<OscilloscopeProps> = ({ telemetry, isPaused 
     eegPhase.current = (eegPhase.current + dt) % 1000.0;
     const t = eegPhase.current;
 
-    // Real-time composite brain rhythm (Alpha 10Hz, Beta 18Hz, Theta 6Hz, Gamma 35Hz, Delta 2Hz)
+    // Organic neural rhythms calibrated for 30Hz display:
+    // Alpha (rhythmic ~3.6 Hz wave bursts with gentle envelope modulation)
+    // Beta (faster ~6.8 Hz alertness ripples)
+    // Theta & Delta (slow rolling baseline ~1.2 Hz)
+    const alphaEnvelope = 0.8 + 0.2 * Math.sin(2 * Math.PI * 0.4 * t);
     let eegPoint = 0.5;
-    eegPoint += Math.sin(2 * Math.PI * 10 * t) * (alpha * 0.24);
-    eegPoint += Math.sin(2 * Math.PI * 18 * t) * (beta * 0.14);
-    eegPoint += Math.sin(2 * Math.PI * 5.5 * t) * (theta * 0.18);
-    eegPoint += Math.sin(2 * Math.PI * 13.5 * t) * (smr * 0.10);
-    eegPoint += Math.sin(2 * Math.PI * 34 * t) * (gamma * 0.06);
-    eegPoint += Math.sin(2 * Math.PI * 2 * t) * (delta * 0.14);
-    eegPoint += (Math.random() - 0.5) * 0.04; // Micro neural noise
+    eegPoint += Math.sin(2 * Math.PI * 3.6 * t) * (alpha * 0.26 * alphaEnvelope);
+    eegPoint += Math.sin(2 * Math.PI * 6.8 * t) * (beta * 0.14);
+    eegPoint += Math.sin(2 * Math.PI * 1.6 * t) * (theta * 0.16);
+    eegPoint += Math.sin(2 * Math.PI * 4.8 * t) * (smr * 0.10);
+    eegPoint += Math.sin(2 * Math.PI * 0.6 * t) * (delta * 0.12);
 
     // High-amplitude artifact surge (e.g. eye blink / EMG clench)
     if (telemetry.states?.artifact_flag) {
-      eegPoint += Math.sin(t * 35) * 0.35 + (Math.random() - 0.5) * 0.25;
+      eegPoint += Math.sin(t * 12) * 0.35 + (Math.random() - 0.5) * 0.15;
     }
 
     // Protect against NaN
     if (isNaN(eegPoint)) eegPoint = 0.5;
-    eegPoint = Math.max(0.05, Math.min(0.95, eegPoint));
+    eegPoint = Math.max(0.08, Math.min(0.92, eegPoint));
     eegHistory.current.push(eegPoint);
     if (eegHistory.current.length > 200) eegHistory.current.shift();
 
@@ -150,13 +152,16 @@ export const Oscilloscope: React.FC<OscilloscopeProps> = ({ telemetry, isPaused 
         chH: number,
         strokeColor: string,
         glowColor: string,
-        lineWidth: number
+        lineWidth: number,
+        blur = 3
       ) => {
         if (buf.length < 2) return;
         ctx.strokeStyle = strokeColor;
         ctx.shadowColor = glowColor;
-        ctx.shadowBlur = 6;
+        ctx.shadowBlur = blur;
         ctx.lineWidth = lineWidth;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
         ctx.beginPath();
 
         const dx = width / (buf.length - 1);
@@ -188,14 +193,14 @@ export const Oscilloscope: React.FC<OscilloscopeProps> = ({ telemetry, isPaused 
         ctx.stroke();
         ctx.setLineDash([]);
 
-        // CH1: Respiration (Emerald)
-        drawChannelTrace(respHistory.current, 0, chH, '#10b981', '#10b981aa', 2.2);
+        // CH1: Respiration (Emerald, smooth breathing wave)
+        drawChannelTrace(respHistory.current, 0, chH, '#10b981', '#10b981aa', 1.8, 4);
 
-        // CH2: ECG Cardiac (Red)
-        drawChannelTrace(ecgHistory.current, chH, chH, '#ef4444', '#ef4444aa', 2.0);
+        // CH2: ECG Cardiac (Red, crisp PQRST rhythm)
+        drawChannelTrace(ecgHistory.current, chH, chH, '#ef4444', '#ef4444aa', 1.8, 4);
 
-        // CH3: EEG Brainwaves (Purple / Violet)
-        drawChannelTrace(eegHistory.current, chH * 2, chH, '#c084fc', '#c084fcaa', 1.8);
+        // CH3: EEG Brainwaves (Purple / Violet, fine delicate medical pen trace)
+        drawChannelTrace(eegHistory.current, chH * 2, chH, '#c084fc', '#c084fc66', 1.2, 1.5);
 
         // Channel Labels
         ctx.font = '10px monospace';
@@ -209,19 +214,19 @@ export const Oscilloscope: React.FC<OscilloscopeProps> = ({ telemetry, isPaused 
         ctx.fillText('CH3: EEG BRAINWAVE RHYTHMS (ALPHA/BETA/THETA)', 12, chH * 2 + 16);
       } else if (mode === 'resp') {
         // Solo Respiration
-        drawChannelTrace(respHistory.current, 0, height, '#10b981', '#10b981aa', 2.5);
+        drawChannelTrace(respHistory.current, 0, height, '#10b981', '#10b981aa', 2.2, 5);
         ctx.font = '11px monospace';
         ctx.fillStyle = '#10b981cc';
         ctx.fillText('CH1: RESPIRATION WAVEFORM (SOLO)', 12, 20);
       } else if (mode === 'ecg') {
         // Solo ECG
-        drawChannelTrace(ecgHistory.current, 0, height, '#ef4444', '#ef4444aa', 2.2);
+        drawChannelTrace(ecgHistory.current, 0, height, '#ef4444', '#ef4444aa', 2.0, 4);
         ctx.font = '11px monospace';
         ctx.fillStyle = '#ef4444cc';
         ctx.fillText('CH2: ECG CARDIAC VECTOR (SOLO)', 12, 20);
       } else if (mode === 'eeg') {
         // Solo EEG
-        drawChannelTrace(eegHistory.current, 0, height, '#c084fc', '#c084fcaa', 2.0);
+        drawChannelTrace(eegHistory.current, 0, height, '#c084fc', '#c084fc66', 1.4, 2);
         ctx.font = '11px monospace';
         ctx.fillStyle = '#c084fccc';
         ctx.fillText('CH3: EEG BRAINWAVE COMPOSITE RHYTHM (SOLO 0.5–50Hz)', 12, 20);
