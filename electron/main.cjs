@@ -6,12 +6,36 @@ const { startSimDataServer } = require('../server/bioServer.cjs');
 let mainWindow = null;
 let bioBridge = null;
 
+function getRecordingsDir() {
+  const userDataDir = app.getPath('userData');
+  const recordingsDir = path.join(userDataDir, 'recordings');
+  if (!fs.existsSync(recordingsDir)) {
+    fs.mkdirSync(recordingsDir, { recursive: true });
+  }
+
+  // Seed default bundled recordings to user's writable recordings directory
+  const bundledDir = path.join(__dirname, '..', 'assets', 'recordings');
+  if (fs.existsSync(bundledDir)) {
+    try {
+      const defaultFiles = fs.readdirSync(bundledDir).filter(f => f.endsWith('.json') || f.endsWith('.csv'));
+      for (const f of defaultFiles) {
+        const src = path.join(bundledDir, f);
+        const dst = path.join(recordingsDir, f);
+        if (!fs.existsSync(dst)) {
+          fs.copyFileSync(src, dst);
+        }
+      }
+    } catch (e) {
+      console.warn('[SimData] Could not seed default recordings to userData:', e);
+    }
+  }
+
+  return recordingsDir;
+}
+
 // Handle opening recordings folder in native file manager
 ipcMain.handle('open-recordings-folder', async () => {
-  const recDir = path.join(__dirname, '..', 'assets', 'recordings');
-  if (!fs.existsSync(recDir)) {
-    fs.mkdirSync(recDir, { recursive: true });
-  }
+  const recDir = getRecordingsDir();
   await shell.openPath(recDir);
   return true;
 });
@@ -19,10 +43,11 @@ ipcMain.handle('open-recordings-folder', async () => {
 function createWindow() {
   const wsPort = Number(process.env.PORT || process.env.WS_PORT) || 8081;
   const oscPort = Number(process.env.OSC_PORT) || 9000;
+  const recordingsDir = getRecordingsDir();
 
   // Start the background BioEngine WebSocket & OSC UDP server
   try {
-    bioBridge = startSimDataServer({ wsPort, oscPort });
+    bioBridge = startSimDataServer({ wsPort, oscPort, recordingsDir });
   } catch (err) {
     console.error('[SimData] Failed to start internal bridge server:', err);
   }

@@ -91,6 +91,9 @@ export const App: React.FC = () => {
   // Buffer recent frames for live CSV export
   const sessionHistory = useRef<SimDataTelemetry[]>([]);
 
+  // Local cache for in-memory / uploaded dataset contents
+  const localFileCache = useRef<Map<string, string>>(new Map());
+
   // Playback States
   const [availableDatasets, setAvailableDatasets] = useState<string[]>([
     'meditation_deep_flow.json',
@@ -225,7 +228,7 @@ export const App: React.FC = () => {
         if (res.ok) {
           const json = await res.json();
           if (Array.isArray(json.files) && json.files.length > 0) {
-            setAvailableDatasets(json.files);
+            setAvailableDatasets((prev) => Array.from(new Set([...prev, ...json.files])));
           }
         }
       } catch (e) {}
@@ -371,6 +374,19 @@ export const App: React.FC = () => {
   // Dataset Transport Handlers
   const handleSelectDataset = async (name: string) => {
     setSelectedDataset(name);
+
+    // If file is cached in memory, load immediately
+    if (localFileCache.current.has(name)) {
+      const cached = localFileCache.current.get(name)!;
+      if (name.endsWith('.json')) {
+        datasetPlayer.current.loadJson(name, cached);
+      } else {
+        datasetPlayer.current.loadCsv(name, cached);
+      }
+      setPlaybackState(datasetPlayer.current.getState());
+      return;
+    }
+
     try {
       const res = await fetch(`${getHttpBaseUrl()}/api/recordings/${name}`);
       if (res.ok) {
@@ -421,6 +437,22 @@ export const App: React.FC = () => {
   };
 
   const handleDownloadDataset = (name: string) => {
+    if (localFileCache.current.has(name)) {
+      const content = localFileCache.current.get(name)!;
+      const blob = new Blob([content], {
+        type: name.endsWith('.json') ? 'application/json' : 'text/csv'
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      return;
+    }
+
     const url = `${getHttpBaseUrl()}/api/recordings/${name}`;
     const link = document.createElement('a');
     link.href = url;
@@ -493,6 +525,8 @@ export const App: React.FC = () => {
       // Update state in memory immediately
       setSelectedDataset(saveFilename);
       setPlaybackState(datasetPlayer.current.getState());
+      localFileCache.current.set(saveFilename, saveContent);
+      setAvailableDatasets((prev) => (prev.includes(saveFilename) ? prev : [saveFilename, ...prev]));
 
       // Persist to backend server so it stays across restarts
       try {
@@ -504,7 +538,7 @@ export const App: React.FC = () => {
         if (postRes.ok) {
           const json = await postRes.json();
           if (Array.isArray(json.files)) {
-            setAvailableDatasets(json.files);
+            setAvailableDatasets((prev) => Array.from(new Set([saveFilename, ...json.files, ...prev])));
           }
         }
       } catch (err) {

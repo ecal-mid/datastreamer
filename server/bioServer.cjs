@@ -383,6 +383,9 @@ function startSimDataServer(options = {}) {
   const oscPort = options.oscPort || OSC_PORT;
   const oscHost = options.oscHost || OSC_HOST;
 
+  const bundledRecordingsDir = path.join(__dirname, '..', 'assets', 'recordings');
+  const recordingsDir = options.recordingsDir || process.env.SIMDATA_RECORDINGS_DIR || bundledRecordingsDir;
+
   const engine = new SimulationEngine();
 
   // UDP OSC Socket
@@ -430,13 +433,23 @@ function startSimDataServer(options = {}) {
     }
 
     if (req.url === '/api/recordings' && req.method === 'GET') {
-      const recDir = path.join(__dirname, '..', 'assets', 'recordings');
-      let files = [];
-      try {
-        files = fs.readdirSync(recDir).filter(f => f.endsWith('.json') || f.endsWith('.csv'));
-      } catch (e) {}
+      const fileSet = new Set();
+      if (fs.existsSync(recordingsDir)) {
+        try {
+          fs.readdirSync(recordingsDir)
+            .filter(f => f.endsWith('.json') || f.endsWith('.csv'))
+            .forEach(f => fileSet.add(f));
+        } catch (e) {}
+      }
+      if (recordingsDir !== bundledRecordingsDir && fs.existsSync(bundledRecordingsDir)) {
+        try {
+          fs.readdirSync(bundledRecordingsDir)
+            .filter(f => f.endsWith('.json') || f.endsWith('.csv'))
+            .forEach(f => fileSet.add(f));
+        } catch (e) {}
+      }
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ files }));
+      res.end(JSON.stringify({ files: Array.from(fileSet) }));
       return;
     }
 
@@ -461,19 +474,29 @@ function startSimDataServer(options = {}) {
             res.end(JSON.stringify({ error: 'File must have .json or .csv extension' }));
             return;
           }
-          const recDir = path.join(__dirname, '..', 'assets', 'recordings');
-          if (!fs.existsSync(recDir)) {
-            fs.mkdirSync(recDir, { recursive: true });
+          if (!fs.existsSync(recordingsDir)) {
+            fs.mkdirSync(recordingsDir, { recursive: true });
           }
-          const destPath = path.join(recDir, safeName);
+          const destPath = path.join(recordingsDir, safeName);
           fs.writeFileSync(destPath, parsed.content, 'utf8');
 
-          const files = fs.readdirSync(recDir).filter(f => f.endsWith('.json') || f.endsWith('.csv'));
+          const fileSet = new Set();
+          if (fs.existsSync(recordingsDir)) {
+            fs.readdirSync(recordingsDir)
+              .filter(f => f.endsWith('.json') || f.endsWith('.csv'))
+              .forEach(f => fileSet.add(f));
+          }
+          if (recordingsDir !== bundledRecordingsDir && fs.existsSync(bundledRecordingsDir)) {
+            fs.readdirSync(bundledRecordingsDir)
+              .filter(f => f.endsWith('.json') || f.endsWith('.csv'))
+              .forEach(f => fileSet.add(f));
+          }
           res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ success: true, filename: safeName, files }));
+          res.end(JSON.stringify({ success: true, filename: safeName, files: Array.from(fileSet) }));
         } catch (err) {
+          console.error('[SimData] Error writing recording file:', err);
           res.writeHead(500, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'Failed to write recording file' }));
+          res.end(JSON.stringify({ error: 'Failed to write recording file: ' + err.message }));
         }
       });
       return;
@@ -498,7 +521,10 @@ function startSimDataServer(options = {}) {
     // Serve recordings content
     if (req.url.startsWith('/api/recordings/')) {
       const fileName = path.basename(req.url.replace('/api/recordings/', ''));
-      const filePath = path.join(__dirname, '..', 'assets', 'recordings', fileName);
+      let filePath = path.join(recordingsDir, fileName);
+      if (!fs.existsSync(filePath) && recordingsDir !== bundledRecordingsDir) {
+        filePath = path.join(bundledRecordingsDir, fileName);
+      }
       if (fs.existsSync(filePath)) {
         const content = fs.readFileSync(filePath, 'utf8');
         res.writeHead(200, {
