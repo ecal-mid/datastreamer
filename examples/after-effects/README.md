@@ -127,3 +127,4 @@ If you want actual keyframe points on your timeline (to manipulate handles in th
 3. Select `examples/after-effects/bake_simdata_to_keyframes.jsx`.
 4. Pick your exported CSV file and choose which metric column to bake.
 5. The script automatically places keyframes spaced at 30 fps across the active work area.
+

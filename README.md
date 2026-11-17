@@ -229,6 +229,16 @@ The companion Figma plugin binds live biometric telemetry directly into native F
 * **Offline F-Curve Baking**: Import exported CSV files directly into keyframes on any 3D object, light, or shape key at 30 fps.
 * **Python Scripts & Guide**: See [Blender Integration Guide](examples/blender/README.md) for complete setup instructions, live listener, and keyframe baker scripts.
 
+### Adobe After Effects (Motion Graphics & UI Case Studies)
+* **Data-Driven Animation**: Export a session as CSV via the top header **`CSV`** button.
+* **1:1 Frame Sync**: Set your After Effects composition to **`30 fps`** to match SimData's 30 Hz tick rate.
+* **Native Expressions & ExtendScript Baker**: See [After Effects Integration Guide](examples/after-effects/README.md) for ready-to-use expression recipes (respiration scale, BPM counter, calm color shifts) and a keyframe baking script.
+
+### Blender 3D (Procedural Mesh, Geometry Nodes & Shaders)
+* **Real-Time Viewport Streaming**: Listen to live 30 Hz OSC UDP packets on port `9000` via a non-blocking Python modal operator.
+* **Offline F-Curve Baking**: Import exported CSV files directly into keyframes on any 3D object, light, or shape key at 30 fps.
+* **Python Scripts & Guide**: See [Blender Integration Guide](examples/blender/README.md) for complete setup instructions, live listener, and keyframe baker scripts.
+
 ### TouchDesigner
 * **WebSocket DAT**: Set Network address to `ws://127.0.0.1:8081` (or `:8080`). Parse JSON with a simple DAT execute script.
 * **OSC In CHOP**: Set Network Port to `9000`. Channels `/bio/eeg/*`, `/bio/hrv/*`, `/bio/respiration` appear instantly.

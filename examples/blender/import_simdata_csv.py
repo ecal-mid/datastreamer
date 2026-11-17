@@ -75,3 +75,4 @@ def bake_simdata_to_object(csv_path):
 
 if __name__ == "__main__":
     bake_simdata_to_object(CSV_PATH)
+

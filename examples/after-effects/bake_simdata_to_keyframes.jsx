@@ -100,3 +100,4 @@
 
     alert("Successfully baked " + count + " keyframes for '" + headers[colIndex] + "' starting at " + startTime.toFixed(2) + "s.");
 })();
+
