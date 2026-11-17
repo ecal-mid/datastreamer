@@ -688,14 +688,9 @@ export const App: React.FC = () => {
 
             <TabsContent value="playback" className="mt-0">
               <DatasetTab
-                playbackState={playbackState}
                 availableDatasets={availableDatasets}
                 selectedDataset={selectedDataset}
                 onSelectDataset={handleSelectDataset}
-                onTogglePlay={handleTogglePlay}
-                onToggleLoop={handleToggleLoop}
-                onSeek={handleSeek}
-                onSetSpeed={handleSetSpeed}
                 onDownloadDataset={handleDownloadDataset}
                 onUploadDataset={handleUploadDataset}
                 onDownloadTemplate={handleDownloadTemplate}

@@ -1,10 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { DatasetPlaybackState } from '../engine/types';
 import {
-  Play,
-  Pause,
-  Repeat,
-  FastForward,
   FileText,
   HardDrive,
   Download,
@@ -14,23 +10,20 @@ import {
   AlertCircle,
   Brain,
   HeartPulse,
-  Sparkles,
-  FileSpreadsheet
 } from 'lucide-react';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { Slider } from './ui/slider';
 
 interface DatasetTabProps {
-  playbackState: DatasetPlaybackState;
+  playbackState?: DatasetPlaybackState;
   availableDatasets: string[];
   selectedDataset: string;
   onSelectDataset: (name: string) => void;
-  onTogglePlay: () => void;
-  onToggleLoop: () => void;
-  onSeek: (progress: number) => void;
-  onSetSpeed: (speed: number) => void;
+  onTogglePlay?: () => void;
+  onToggleLoop?: () => void;
+  onSeek?: (progress: number) => void;
+  onSetSpeed?: (speed: number) => void;
   onDownloadDataset?: (name: string) => void;
   onUploadDataset?: (file: File) => Promise<{ success: boolean; frameCount?: number; format?: string; message?: string; error?: string }>;
   onDownloadTemplate?: () => void;
@@ -39,17 +32,11 @@ interface DatasetTabProps {
   isDesktop?: boolean;
 }
 
-const SPEED_OPTIONS = [0.5, 1.0, 2.0, 4.0];
-
 export const DatasetTab: React.FC<DatasetTabProps> = ({
   playbackState,
   availableDatasets,
   selectedDataset,
   onSelectDataset,
-  onTogglePlay,
-  onToggleLoop,
-  onSeek,
-  onSetSpeed,
   onDownloadDataset,
   onUploadDataset,
   onDownloadTemplate,
@@ -57,10 +44,6 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({
   onOpenFolder,
   isDesktop = false,
 }) => {
-  const { isPlaying, isLooping, speed, currentIndex, totalFrames, durationSeconds } = playbackState;
-
-  const currentSec = totalFrames > 0 ? (currentIndex / 30).toFixed(1) : '0.0';
-
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [uploadStatus, setUploadStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -202,6 +185,12 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({
                 </div>
 
                 <div className="flex items-center gap-1.5 shrink-0">
+                  {isSelected && (
+                    <Badge variant="cyan" className="text-[9px] bg-primary/20 text-primary border-primary/40 font-mono">
+                      PLAYING
+                    </Badge>
+                  )}
+
                   {isImportedMuse ? (
                     <Badge variant="cyan" className="text-[9px] bg-purple-500/20 text-purple-300 border-purple-500/40">
                       MUSE
@@ -348,75 +337,6 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({
           </button>
         </div>
       )}
-
-      {/* Transport Controls & Timeline Scrubber using shadcn */}
-      <Card className="bg-card/60 border-border p-4 space-y-4">
-        {/* Timeline Scrubber */}
-        <div className="space-y-2">
-          <div className="flex justify-between text-xs font-mono text-muted-foreground">
-            <span>Playback Timeline</span>
-            <span className="text-foreground font-semibold">
-              {currentSec}s / {durationSeconds}s ({currentIndex} / {totalFrames} frames)
-            </span>
-          </div>
-
-          <Slider
-            min={0}
-            max={totalFrames > 0 ? totalFrames - 1 : 1}
-            step={1}
-            value={[currentIndex]}
-            onValueChange={([val]) => {
-              if (totalFrames > 0) onSeek(val / (totalFrames - 1));
-            }}
-            trackClassName="h-2.5"
-          />
-        </div>
-
-        {/* Transport Buttons */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-          <div className="flex items-center gap-2">
-            {/* Play / Pause */}
-            <Button
-              variant={isPlaying ? 'destructive' : 'default'}
-              size="sm"
-              onClick={onTogglePlay}
-              className="gap-2 font-mono font-semibold"
-            >
-              {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 fill-current" />}
-              <span>{isPlaying ? 'PAUSE' : 'PLAY'}</span>
-            </Button>
-
-            {/* Loop toggle */}
-            <Button
-              variant={isLooping ? 'telemetry' : 'outline'}
-              size="sm"
-              onClick={onToggleLoop}
-              className="gap-1.5 font-mono"
-            >
-              <Repeat className="w-3.5 h-3.5" />
-              <span>LOOP: {isLooping ? 'ON' : 'OFF'}</span>
-            </Button>
-          </div>
-
-          {/* Speed Multipliers */}
-          <div className="flex items-center gap-1 bg-secondary/50 p-1 rounded-md border border-border text-xs font-mono">
-            <span className="text-[10px] text-muted-foreground px-2 flex items-center gap-1">
-              <FastForward className="w-3 h-3" /> SPEED:
-            </span>
-            {SPEED_OPTIONS.map((s) => (
-              <Button
-                key={s}
-                variant={speed === s ? 'default' : 'ghost'}
-                size="xs"
-                onClick={() => onSetSpeed(s)}
-                className="font-mono px-2"
-              >
-                {s}x
-              </Button>
-            ))}
-          </div>
-        </div>
-      </Card>
     </div>
   );
 };
