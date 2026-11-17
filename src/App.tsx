@@ -158,12 +158,6 @@ export const App: React.FC = () => {
                 datasetPlayer.current.setSpeed(data.speed);
               }
             } else if (data.biometrics) {
-              // When in playback tab, the local dataset player owns the telemetry.
-              // Ignore synthetic generator frames coming from WebSocket.
-              if (activeTabRef.current === 'playback') {
-                return;
-              }
-
               setTelemetry(data);
               setOscPackets((prev) => prev + 10);
 
@@ -260,19 +254,32 @@ export const App: React.FC = () => {
     loadDefaultDataset();
   }, []);
 
-  // 30 Hz local simulation loop
+  // 30 Hz local simulation loop (only ticks locally when offline / !wsConnected)
   useEffect(() => {
     const timer = setInterval(() => {
-      if (activeTab === 'playback') {
-        const frame = datasetPlayer.current.tick();
-        if (frame) {
+      if (!wsConnected) {
+        if (activeTab === 'playback') {
+          const frame = datasetPlayer.current.tick();
+          if (frame) {
+            setTelemetry(frame);
+            setPlaybackState(datasetPlayer.current.getState());
+            sessionHistory.current.push(frame);
+            if (sessionHistory.current.length > 900) sessionHistory.current.shift();
+
+            if (sonification.current.getIsEnabled() && !isPaused) {
+              sonification.current.update(
+                frame.biometrics.hrv.bpm,
+                frame.biometrics.respiration.value,
+                frame.biometrics.respiration.phase,
+                0.5
+              );
+            }
+          }
+        } else {
+          const frame = localEngine.current.tick(1 / 30);
           setTelemetry(frame);
-          setPlaybackState(datasetPlayer.current.getState());
           sessionHistory.current.push(frame);
           if (sessionHistory.current.length > 900) sessionHistory.current.shift();
-
-          // Stream the playback frame to backend server so OSC :9000 & Figma stay synchronized
-          sendControlMessage({ type: 'PLAYBACK_FRAME', frame });
 
           if (sonification.current.getIsEnabled() && !isPaused) {
             sonification.current.update(
@@ -282,20 +289,6 @@ export const App: React.FC = () => {
               0.5
             );
           }
-        }
-      } else if (!wsConnected) {
-        const frame = localEngine.current.tick(1 / 30);
-        setTelemetry(frame);
-        sessionHistory.current.push(frame);
-        if (sessionHistory.current.length > 900) sessionHistory.current.shift();
-
-        if (sonification.current.getIsEnabled() && !isPaused) {
-          sonification.current.update(
-            frame.biometrics.hrv.bpm,
-            frame.biometrics.respiration.value,
-            frame.biometrics.respiration.phase,
-            0.5
-          );
         }
       }
     }, 1000 / 30);
@@ -310,13 +303,10 @@ export const App: React.FC = () => {
     localEngine.current.setMode(mode);
     sendControlMessage({ type: 'SET_MODE', mode });
 
-    // When switching to playback tab, immediately display current dataset frame
     if (tab === 'playback') {
-      const cur = datasetPlayer.current.getCurrentFrame();
-      if (cur) {
-        setTelemetry(cur);
-        setPlaybackState(datasetPlayer.current.getState());
-        sendControlMessage({ type: 'PLAYBACK_FRAME', frame: cur });
+      sendControlMessage({ type: 'SET_DATASET', name: selectedDataset });
+      if (!isPaused) {
+        datasetPlayer.current.play();
       }
     }
   };
@@ -409,7 +399,14 @@ export const App: React.FC = () => {
   const handleSelectDataset = async (name: string) => {
     setSelectedDataset(name);
 
-    // If file is cached in memory, load immediately
+    if (isPaused) {
+      setIsPaused(false);
+      localEngine.current.setPaused(false);
+      sendControlMessage({ type: 'SET_PAUSED', paused: false });
+    }
+    datasetPlayer.current.play();
+
+    // If file is cached in memory, load immediately and send to server
     if (localFileCache.current.has(name)) {
       const cached = localFileCache.current.get(name)!;
       if (name.endsWith('.json')) {
@@ -417,14 +414,13 @@ export const App: React.FC = () => {
       } else {
         datasetPlayer.current.loadCsv(name, cached);
       }
+      datasetPlayer.current.play();
       setPlaybackState(datasetPlayer.current.getState());
-      const cur = datasetPlayer.current.getCurrentFrame();
-      if (cur) {
-        setTelemetry(cur);
-        sendControlMessage({ type: 'PLAYBACK_FRAME', frame: cur });
-      }
+      sendControlMessage({ type: 'SET_DATASET', name, content: cached });
       return;
     }
+
+    sendControlMessage({ type: 'SET_DATASET', name });
 
     try {
       const res = await fetch(`${getHttpBaseUrl()}/api/recordings/${name}`);
@@ -436,12 +432,8 @@ export const App: React.FC = () => {
           const csvText = await res.text();
           datasetPlayer.current.loadCsv(name, csvText);
         }
+        datasetPlayer.current.play();
         setPlaybackState(datasetPlayer.current.getState());
-        const cur = datasetPlayer.current.getCurrentFrame();
-        if (cur) {
-          setTelemetry(cur);
-          sendControlMessage({ type: 'PLAYBACK_FRAME', frame: cur });
-        }
       }
     } catch (e) {}
   };
@@ -573,9 +565,16 @@ export const App: React.FC = () => {
 
       // Update state in memory immediately
       setSelectedDataset(saveFilename);
+      datasetPlayer.current.play();
+      setIsPaused(false);
+      localEngine.current.setPaused(false);
       setPlaybackState(datasetPlayer.current.getState());
       localFileCache.current.set(saveFilename, saveContent);
       setAvailableDatasets((prev) => (prev.includes(saveFilename) ? prev : [saveFilename, ...prev]));
+
+      // Tell backend server to unpause and load this dataset
+      sendControlMessage({ type: 'SET_PAUSED', paused: false });
+      sendControlMessage({ type: 'SET_DATASET', name: saveFilename, content: saveContent });
 
       // Persist to backend server so it stays across restarts
       try {
