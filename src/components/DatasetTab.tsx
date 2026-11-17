@@ -11,7 +11,11 @@ import {
   UploadCloud,
   FolderOpen,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Brain,
+  HeartPulse,
+  Sparkles,
+  FileSpreadsheet
 } from 'lucide-react';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
@@ -28,8 +32,9 @@ interface DatasetTabProps {
   onSeek: (progress: number) => void;
   onSetSpeed: (speed: number) => void;
   onDownloadDataset?: (name: string) => void;
-  onUploadDataset?: (file: File) => Promise<{ success: boolean; frameCount?: number; error?: string }>;
+  onUploadDataset?: (file: File) => Promise<{ success: boolean; frameCount?: number; format?: string; message?: string; error?: string }>;
   onDownloadTemplate?: () => void;
+  onDownloadSample?: (sampleName: string) => void;
   onOpenFolder?: () => void;
   isDesktop?: boolean;
 }
@@ -48,6 +53,7 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({
   onDownloadDataset,
   onUploadDataset,
   onDownloadTemplate,
+  onDownloadSample,
   onOpenFolder,
   isDesktop = false,
 }) => {
@@ -86,7 +92,7 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({
       if (res.success) {
         setUploadStatus({
           type: 'success',
-          message: `Loaded "${file.name}" successfully (${res.frameCount} frames). Saved to library.`
+          message: res.message || `Loaded "${file.name}" successfully (${res.frameCount} frames). Saved to library.`
         });
       } else {
         setUploadStatus({
@@ -169,6 +175,8 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({
           {availableDatasets.map((name) => {
             const isSelected = selectedDataset === name;
             const isJson = name.endsWith('.json');
+            const isImportedMuse = name.includes('muse');
+            const isImportedWesad = name.includes('wesad');
 
             return (
               <div
@@ -181,16 +189,32 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({
                 }`}
               >
                 <div className="flex items-center gap-2 overflow-hidden min-w-0 pr-2">
-                  <FileText className={`w-4 h-4 shrink-0 ${isJson ? 'text-amber-400' : 'text-emerald-400'}`} />
+                  {isImportedMuse ? (
+                    <Brain className="w-4 h-4 shrink-0 text-purple-400" />
+                  ) : isImportedWesad ? (
+                    <HeartPulse className="w-4 h-4 shrink-0 text-red-400" />
+                  ) : (
+                    <FileText className={`w-4 h-4 shrink-0 ${isJson ? 'text-amber-400' : 'text-emerald-400'}`} />
+                  )}
                   <span className="text-xs font-mono truncate text-foreground" title={name}>
                     {name}
                   </span>
                 </div>
 
                 <div className="flex items-center gap-1.5 shrink-0">
-                  <Badge variant={isJson ? 'warning' : 'success'} className="text-[9px]">
-                    {isJson ? 'JSON' : 'CSV'}
-                  </Badge>
+                  {isImportedMuse ? (
+                    <Badge variant="cyan" className="text-[9px] bg-purple-500/20 text-purple-300 border-purple-500/40">
+                      MUSE
+                    </Badge>
+                  ) : isImportedWesad ? (
+                    <Badge variant="cyan" className="text-[9px] bg-red-500/20 text-red-300 border-red-500/40">
+                      WESAD
+                    </Badge>
+                  ) : (
+                    <Badge variant={isJson ? 'warning' : 'success'} className="text-[9px]">
+                      {isJson ? 'JSON' : 'CSV'}
+                    </Badge>
+                  )}
 
                   {onDownloadDataset && (
                     <Button
@@ -213,35 +237,90 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({
         </div>
       </Card>
 
-      {/* Drag & Drop Upload Zone */}
+      {/* Universal Biometric Importer & Dropzone */}
       {onUploadDataset && (
-        <div
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          onClick={() => fileInputRef.current?.click()}
-          className={`border border-dashed rounded-lg p-3.5 flex flex-col items-center justify-center gap-1 cursor-pointer transition-all ${
-            isDragging
-              ? 'border-primary bg-primary/10 scale-[1.01]'
-              : 'border-border/80 hover:border-primary/50 hover:bg-secondary/30 bg-card/40'
-          }`}
-        >
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileInput}
-            accept=".csv,.json"
-            className="hidden"
-          />
-          <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground">
-            <UploadCloud className="w-4 h-4 text-primary" />
-            <span className="font-semibold text-foreground">Drop custom .csv or .json recording here</span>
-            <span className="text-muted-foreground/80">or click to browse</span>
+        <Card className="bg-card/50 border-border p-3 space-y-2.5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5 text-xs font-mono uppercase text-foreground font-semibold">
+              <Sparkles className="w-3.5 h-3.5 text-primary" />
+              <span>Universal Biometric Importer & Dropzone</span>
+            </div>
+
+            {/* Supported Format Badges */}
+            <div className="flex flex-wrap items-center gap-1 text-[10px] font-mono">
+              <Badge variant="secondary" className="gap-1 bg-purple-500/15 text-purple-300 border border-purple-500/30">
+                <Brain className="w-3 h-3" />
+                <span>Muse / Mind Monitor</span>
+              </Badge>
+              <Badge variant="secondary" className="gap-1 bg-red-500/15 text-red-300 border border-red-500/30">
+                <HeartPulse className="w-3 h-3" />
+                <span>WESAD / Empatica E4</span>
+              </Badge>
+              <Badge variant="secondary" className="gap-1 bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                <FileSpreadsheet className="w-3 h-3" />
+                <span>SimData CSV / JSON</span>
+              </Badge>
+            </div>
           </div>
-          <div className="text-[10px] font-mono text-muted-foreground/70">
-            Automatically parses 30 Hz telemetry, loads into player, and persists to library
+
+          <div
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onClick={() => fileInputRef.current?.click()}
+            className={`border border-dashed rounded-lg p-3.5 flex flex-col items-center justify-center gap-1 cursor-pointer transition-all ${
+              isDragging
+                ? 'border-primary bg-primary/10 scale-[1.01]'
+                : 'border-border/80 hover:border-primary/50 hover:bg-secondary/30 bg-card/40'
+            }`}
+          >
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileInput}
+              accept=".csv,.json"
+              className="hidden"
+            />
+            <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground">
+              <UploadCloud className="w-4 h-4 text-primary" />
+              <span className="font-semibold text-foreground">Drop any recording: SimData, Muse (Mind Monitor), or WESAD</span>
+              <span className="text-muted-foreground/80">or click to browse</span>
+            </div>
+            <div className="text-[10px] font-mono text-muted-foreground/70">
+              Auto-detects format, converts to 30 Hz standardized telemetry, starts live streaming, and saves to library
+            </div>
           </div>
-        </div>
+
+          {/* Sample Download Links for Quick Testing */}
+          {onDownloadSample && (
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-border/40 text-[11px] font-mono text-muted-foreground">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground/80">
+                Test with open datasets:
+              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => onDownloadSample('sample_mind_monitor_muse.csv')}
+                  className="flex items-center gap-1 text-purple-400 hover:text-purple-300 hover:underline"
+                  title="Download sample Muse 4-channel EEG recording"
+                >
+                  <Brain className="w-3 h-3" />
+                  <span>Sample Muse CSV</span>
+                </button>
+                <span className="opacity-40">•</span>
+                <button
+                  type="button"
+                  onClick={() => onDownloadSample('sample_wesad_empatica.csv')}
+                  className="flex items-center gap-1 text-red-400 hover:text-red-300 hover:underline"
+                  title="Download sample WESAD ECG & Respiration recording"
+                >
+                  <HeartPulse className="w-3 h-3" />
+                  <span>Sample WESAD CSV</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </Card>
       )}
 
       {/* Upload Feedback Alert */}

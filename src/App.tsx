@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { BioEngine } from './engine/BioEngine';
 import { DatasetPlayer } from './engine/DatasetPlayer';
 import { BioSonification } from './engine/BioSonification';
+import { importBiometricCsv } from './engine/converters';
 import {
   SimDataTelemetry,
   OperatingMode,
@@ -435,31 +436,62 @@ export const App: React.FC = () => {
     link.click();
   };
 
+  const handleDownloadSample = (sampleName: string) => {
+    const url = `${getHttpBaseUrl()}/api/samples/${sampleName}`;
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = sampleName;
+    link.click();
+  };
+
   const handleOpenRecordingsFolder = () => {
     if (typeof window !== 'undefined' && (window as any).simDataDesktop?.openRecordingsFolder) {
       (window as any).simDataDesktop.openRecordingsFolder();
     }
   };
 
-  const handleUploadDataset = async (file: File): Promise<{ success: boolean; frameCount?: number; error?: string }> => {
+  const handleUploadDataset = async (
+    file: File
+  ): Promise<{ success: boolean; frameCount?: number; format?: string; message?: string; error?: string }> => {
     try {
       const text = await file.text();
       let res: { success: boolean; frameCount: number; error?: string };
+      let saveFilename = file.name;
+      let saveContent = text;
+      let detectedFormat = 'simdata';
+      let statusMessage = '';
 
       if (file.name.endsWith('.json')) {
         res = datasetPlayer.current.loadJson(file.name, text);
+        if (!res.success) {
+          return { success: false, error: res.error || 'Failed to parse JSON file' };
+        }
+        statusMessage = `Loaded JSON dataset "${file.name}" (${res.frameCount} frames).`;
       } else if (file.name.endsWith('.csv')) {
-        res = datasetPlayer.current.loadCsv(file.name, text);
+        // Universal Biometric CSV Converter (auto-detects SimData, Muse / Mind Monitor, and WESAD)
+        const conversion = importBiometricCsv(text, file.name);
+        if (!conversion.success) {
+          return { success: false, error: conversion.error || 'Failed to parse CSV dataset' };
+        }
+
+        detectedFormat = conversion.format;
+        statusMessage = conversion.message || `Loaded CSV dataset (${conversion.frameCount} frames).`;
+
+        if (conversion.format === 'muse' || conversion.format === 'wesad') {
+          saveFilename = file.name.startsWith('imported_') ? file.name : `imported_${conversion.format}_${file.name}`;
+          saveContent = conversion.csv;
+        }
+
+        res = datasetPlayer.current.loadCsv(saveFilename, saveContent);
+        if (!res.success) {
+          return { success: false, error: res.error || 'Failed to load converted dataset' };
+        }
       } else {
         return { success: false, error: 'Only .csv or .json files are supported' };
       }
 
-      if (!res.success) {
-        return { success: false, error: res.error || 'Failed to parse file' };
-      }
-
       // Update state in memory immediately
-      setSelectedDataset(file.name);
+      setSelectedDataset(saveFilename);
       setPlaybackState(datasetPlayer.current.getState());
 
       // Persist to backend server so it stays across restarts
@@ -467,7 +499,7 @@ export const App: React.FC = () => {
         const postRes = await fetch(`${getHttpBaseUrl()}/api/recordings`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ filename: file.name, content: text })
+          body: JSON.stringify({ filename: saveFilename, content: saveContent })
         });
         if (postRes.ok) {
           const json = await postRes.json();
@@ -479,7 +511,12 @@ export const App: React.FC = () => {
         console.warn('[SimData] Could not persist uploaded recording to server disk:', err);
       }
 
-      return { success: true, frameCount: res.frameCount };
+      return {
+        success: true,
+        frameCount: res.frameCount,
+        format: detectedFormat,
+        message: statusMessage
+      };
     } catch (e: any) {
       return { success: false, error: e.message || 'Error processing file' };
     }
@@ -579,6 +616,7 @@ export const App: React.FC = () => {
                 onDownloadDataset={handleDownloadDataset}
                 onUploadDataset={handleUploadDataset}
                 onDownloadTemplate={handleDownloadTemplate}
+                onDownloadSample={handleDownloadSample}
                 onOpenFolder={handleOpenRecordingsFolder}
                 isDesktop={typeof window !== 'undefined' && Boolean((window as any).simDataDesktop?.isElectron)}
               />

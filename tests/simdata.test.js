@@ -245,5 +245,47 @@ fs.unlinkSync(testFilePath);
 assert(!fs.existsSync(testFilePath), 'Test upload cleaned up');
 console.log('✓ Test 10 Passed: 17-column template and upload persistence verified.\n');
 
+// Test 11: Muse / Mind Monitor CSV Auto-Detection and 17-Column Conversion
+console.log('Test 11: Muse / Mind Monitor CSV Auto-Detection & Conversion');
+const { detectBiometricFormat, convertMuseToSimData, convertWesadToSimData, importBiometricCsv } = require('../server/converters.cjs');
+const museSample = fs.readFileSync(path.join(__dirname, '..', 'assets', 'samples', 'sample_mind_monitor_muse.csv'), 'utf8');
+
+const detectedMuse = detectBiometricFormat(museSample);
+assert.strictEqual(detectedMuse, 'muse', 'Format detector must recognize Muse / Mind Monitor CSV');
+
+const museResult = convertMuseToSimData(museSample, 'sample_mind_monitor_muse.csv');
+assert(museResult.success, 'Muse conversion must succeed');
+assert.strictEqual(museResult.format, 'muse', 'Converted format must be muse');
+assert(museResult.frameCount >= 30, 'Must convert at least 30 frames');
+
+const museConvertedLines = museResult.csv.trim().split('\n');
+assert.strictEqual(museConvertedLines[0], templateHeader, 'Converted header must match SimData 17 columns');
+const museSampleRow = museConvertedLines[1].split(',');
+assert.strictEqual(museSampleRow.length, 17, 'Converted row must have exactly 17 columns');
+assert(parseFloat(museSampleRow[6]) > 0.0, 'Alpha power must be extracted and > 0');
+console.log(`  Muse conversion verified: ${museResult.frameCount} frames, alpha: ${museSampleRow[6]}, bpm: ${museSampleRow[1]}`);
+console.log('✓ Test 11 Passed: Muse / Mind Monitor conversion verified.\n');
+
+// Test 12: WESAD / Empatica E4 CSV Auto-Detection and Conversion
+console.log('Test 12: WESAD / Empatica E4 CSV Auto-Detection & Conversion');
+const wesadSample = fs.readFileSync(path.join(__dirname, '..', 'assets', 'samples', 'sample_wesad_empatica.csv'), 'utf8');
+
+const detectedWesad = detectBiometricFormat(wesadSample);
+assert.strictEqual(detectedWesad, 'wesad', 'Format detector must recognize WESAD CSV');
+
+const wesadResult = convertWesadToSimData(wesadSample, 'sample_wesad_empatica.csv');
+assert(wesadResult.success, 'WESAD conversion must succeed');
+assert.strictEqual(wesadResult.format, 'wesad', 'Converted format must be wesad');
+assert(wesadResult.frameCount >= 30, 'Must convert at least 30 frames');
+
+const wesadConvertedLines = wesadResult.csv.trim().split('\n');
+assert.strictEqual(wesadConvertedLines[0], templateHeader, 'Converted header must match SimData 17 columns');
+const wesadSampleRow = wesadConvertedLines[1].split(',');
+assert.strictEqual(wesadSampleRow.length, 17, 'Converted row must have exactly 17 columns');
+assert(parseFloat(wesadSampleRow[1]) >= 40, 'Heart rate BPM must be extracted and plausible');
+assert(parseFloat(wesadSampleRow[5]) >= 0.0, 'Respiration value must be normalized');
+console.log(`  WESAD conversion verified: ${wesadResult.frameCount} frames, bpm: ${wesadSampleRow[1]}, resp: ${wesadSampleRow[5]}`);
+console.log('✓ Test 12 Passed: WESAD / Empatica conversion verified.\n');
+
 console.log('🎉 ALL TESTS PASSED SUCCESSFULLY! SimData is 100% verified.');
 

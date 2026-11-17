@@ -510,6 +510,21 @@ function startSimDataServer(options = {}) {
       }
     }
 
+    // Serve sample datasets for testing importers (Muse & WESAD)
+    if (req.url.startsWith('/api/samples/')) {
+      const fileName = path.basename(req.url.replace('/api/samples/', ''));
+      const filePath = path.join(__dirname, '..', 'assets', 'samples', fileName);
+      if (fs.existsSync(filePath)) {
+        const content = fs.readFileSync(filePath, 'utf8');
+        res.writeHead(200, {
+          'Content-Type': 'text/csv',
+          'Content-Disposition': `attachment; filename="${fileName}"`
+        });
+        res.end(content);
+        return;
+      }
+    }
+
     // Serve built UI from dist/
     const distDir = path.join(__dirname, '..', 'dist');
     let reqPath = req.url.split('?')[0];

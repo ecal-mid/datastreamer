@@ -95,7 +95,7 @@ npm run dist:win
 SimData's user interface is crafted with **shadcn/ui** design patterns and Radix UI primitives:
 * **Global Transport Controls:** DAW-style header transport featuring one-click **Play/Pause** (`LIVE` / `PAUSED` indicators) and instant simulation rate multipliers (**`1x`**, **`2x`**, **`4x`**) that synchronize across WebSocket, OSC, and local simulation loops.
 * **Cards & Layout:** High-contrast dark telemetry theme (`Card`, `CardHeader`, `CardTitle`, `CardContent`).
-* **Multi-Trace Oscilloscope:** Canvas 2D engine with real-time respiration curves (CH1), realistic P-Q-R-S-T ECG cardiac vector pulses (CH2), and live status badges (`STREAM PAUSED`, `2x SPEED`, `4x SPEED`).
+* **Multi-Trace Oscilloscope:** Canvas 2D engine with real-time respiration curves (CH1), realistic P-Q-R-S-T ECG cardiac vector pulses (CH2), synthetic EEG brainwave trace (CH3: Delta, Theta, Alpha, Beta, Gamma blend), and live status badges (`STREAM PAUSED`, `2x SPEED`, `4x SPEED`).
 * **Mode Navigation:** Accessible `Tabs` (`TabsList`, `TabsTrigger`, `TabsContent`) for Generative Presets, Manual Puppeteer, and Dataset Playback.
 * **Controls:** Radix-powered `Slider`, `Progress`, `Switch`, and `Button` components.
 * **Badges & Modals:** Live telemetry status `Badge` indicators and `Dialog` modals for Figma setup and JSON payload inspection.
@@ -118,16 +118,20 @@ One-click scenarios with **3-second smooth interpolation** toward target archety
 3. `Cognitive Stress / Overload`: Suppressed Alpha ($0.15$), high Beta ($0.85$), irregular respiration, low Coherence ($0.2$), frequent phasic EDA bursts.
 4. `Drowsiness / Hypnagogia`: High Theta ($0.8$), slow shallow breathing, collapsing tonic EDA.
 
-### Mode C: Dataset Playback Engine & Recordings Library
-Load and manage session recordings in `assets/recordings/`:
+### Mode C: Dataset Playback Engine & Universal Biometric Importer
+Load, convert, and manage session recordings in `assets/recordings/`:
 * **Pre-bundled Recordings**:
   * `meditation_deep_flow.json` (30s 30Hz JSON recording)
   * `cognitive_stress_overload.json` (30s 30Hz JSON recording)
   * `respiratory_coherence_training.csv` (CSV time-series)
   * `drowsiness_hypnagogia.csv` (CSV time-series)
-* **Direct File Download**: Click the download icon next to any recording card in the UI to save the raw `.csv` or `.json` file to your computer.
-* **Drag-and-Drop Dataset Upload**: Drop your own `.csv` or `.json` file onto the dropzone. SimData automatically parses the telemetry, starts playing it immediately, and saves it to `assets/recordings/` so it persists across restarts.
-* **Standardized Blank CSV Template**: Click **Blank CSV Template** to download a ready-to-use template with all 17 biometric column headers.
+* **Universal Biometric Importer & Dropzone**:
+  * Drop native **Muse / Mind Monitor** CSV files (4-channel `alpha_tp9`, `af7`, `af8`, `tp10` EEG recordings) or **WESAD / Empatica E4** CSV files (`resp`, `ecg`, `eda`, condition `label`).
+  * **Automatic Format Auto-Detection**: SimData inspects the header structure and converts external formats client-side into the standardized 30 Hz 17-column SimData format in real time.
+  * **Physiological Cross-Synthesis**: Missing channels are automatically coupled (e.g. synthesizing respiration & HRV for Muse files; mapping WESAD stress/meditation condition labels into EEG band powers & calmness indices).
+  * **Instant Playback & Persistence**: Imported recordings start playing immediately and are saved to `assets/recordings/` prefixed with `imported_muse_` or `imported_wesad_` for persistent access.
+* **Test Sample Downloads**: One-click **[🧠 Sample Muse CSV]** and **[💓 Sample WESAD CSV]** buttons right in the Dataset tab to test import without needing your own hardware.
+* **Direct File Download & Templates**: Click the download icon next to any recording card to save raw `.csv` or `.json` files, or click **Blank CSV Template** for a blank 17-column header template.
 * **Desktop "Open Folder"**: Click **Open Folder** in the desktop app to reveal `assets/recordings/` natively in macOS Finder.
 * **Transport Controls**: **Play**, **Pause**, **Loop Toggle**, **Scrubber Timeline Bar**, and **Speed Multipliers** (`0.5x`, `1.0x`, `2.0x`, `4.0x`).
 
