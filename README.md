@@ -40,7 +40,21 @@ Built with **shadcn/ui** and Tailwind CSS, SimData generates and broadcasts phys
 
 ---
 
-## Quick Start
+## Download & Installation (macOS)
+
+Pre-built binaries for Apple Silicon Macs are available on [GitHub Releases](https://github.com/ecal-mid/datastreamer/releases):
+
+1. Download **`SimData-1.1.0-arm64.dmg`** and drag **SimData.app** into your `/Applications` folder.
+2. **First Launch (macOS Gatekeeper Note):**  
+   If macOS displays *"SimData is damaged and can't be opened"*, open **Terminal** and run:
+   ```bash
+   xattr -cr /Applications/SimData.app
+   ```
+   > **Why?** When any open-source app without a paid Apple Developer certificate is downloaded through a browser, macOS Gatekeeper attaches an extended quarantine flag (`com.apple.quarantine`). Running `xattr -cr` strips this tag and lets SimData open immediately.
+
+---
+
+## Quick Start (Building from Source)
 
 ### 1. Install & Build
 ```bash
