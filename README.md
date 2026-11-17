@@ -93,6 +93,15 @@ npm run dist:mac
 npm run dist:win
 ```
 
+> [!NOTE]
+> **macOS Gatekeeper ("App is damaged and can't be opened"):**
+> Because SimData is an open-source tool without an expensive commercial Apple Developer ID certificate, macOS attaches a quarantine flag (`com.apple.quarantine`) to files downloaded from web browsers (GitHub Releases).
+> If macOS shows *"SimData is damaged and can't be opened"*, simply open Terminal and run:
+> ```bash
+> xattr -cr /Applications/SimData.app
+> ```
+> Or open **System Settings > Privacy & Security**, scroll down and click **"Open Anyway"**.
+
 ---
 
 ## UI Built with shadcn/ui

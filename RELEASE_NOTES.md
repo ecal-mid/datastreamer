@@ -83,3 +83,16 @@ SimData v1.1.0 includes an expanded automated test suite (`npm test`) covering *
 | **[SimData-1.1.0-arm64.dmg](file:///Users/abookm1/Documents/GitHub/datastreamer/release/SimData-1.1.0-arm64.dmg)** | ~99 MB | Apple Silicon macOS Installer (Drag-and-Drop) |
 | **[SimData-1.1.0-arm64-mac.zip](file:///Users/abookm1/Documents/GitHub/datastreamer/release/SimData-1.1.0-arm64-mac.zip)** | ~95 MB | Portable Apple Silicon macOS Application Bundle |
 | **[simdata-figma-plugin.zip](file:///Users/abookm1/Documents/GitHub/datastreamer/figma-plugin/simdata-figma-plugin.zip)** | ~6 KB | Companion Figma Plugin Bundle (Manifest + UI + Code) |
+
+---
+
+### ⚠️ macOS Gatekeeper Note ("App is damaged and can't be opened")
+Because SimData is an open-source tool built without an Apple Developer ID paid certificate ($99/yr), macOS attaches a `com.apple.quarantine` extended attribute when downloaded from the internet (GitHub Releases). On modern macOS versions (Ventura, Sonoma, Sequoia), Gatekeeper displays a misleading *"SimData is damaged and can't be opened"* warning.
+
+To open the app, run this single command in **Terminal**:
+```bash
+xattr -cr /Applications/SimData.app
+```
+*(Or navigate to **System Settings > Privacy & Security**, scroll down to the Security section, and click **"Open Anyway"**).*
+
+
