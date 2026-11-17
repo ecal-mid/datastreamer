@@ -1,6 +1,10 @@
 # SimData — Biofeedback & Neurofeedback Simulator & Bridge
 
-**SimData** is a lightweight, zero-configuration desktop application and companion Figma plugin designed for interaction design students, creative technologists, and researchers prototyping adaptive biofeedback and neurofeedback interfaces without physical biometric sensors.
+[![Version](https://img.shields.io/badge/version-1.1.0-06b6d4?style=flat-square)](https://github.com/ecal-mid/datastreamer)
+[![License: MIT](https://img.shields.io/badge/License-MIT-emerald?style=flat-square)](https://opensource.org/licenses/MIT)
+[![Stream: 30Hz](https://img.shields.io/badge/stream-30Hz-purple?style=flat-square)](https://github.com/ecal-mid/datastreamer)
+
+**SimData** (v1.1.0) is a lightweight, zero-configuration desktop application and companion Figma plugin designed for interaction design students, creative technologists, and researchers prototyping adaptive biofeedback and neurofeedback interfaces without physical biometric sensors.
 
 Built with **shadcn/ui** and Tailwind CSS, SimData generates and broadcasts physiologically plausible real-time biosignals at **30 Hz** simultaneously across two network protocols:
 1. **WebSocket (`ws://127.0.0.1:8081` / `:8080`)** — Structured JSON stream for web prototypes, Figma, and TouchDesigner `WebSocket DAT`.

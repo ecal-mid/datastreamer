@@ -55,7 +55,7 @@ export const PayloadModal: React.FC<PayloadModalProps> = ({ isOpen, onClose, tel
             <div>
               <DialogTitle className="text-base font-bold">SimData Live Telemetry Payloads</DialogTitle>
               <DialogDescription className="text-xs">
-                WebSocket JSON (:8080) & Open Sound Control UDP (:9000)
+                WebSocket JSON (:8081 / :8080) & Open Sound Control UDP (:9000)
               </DialogDescription>
             </div>
           </div>

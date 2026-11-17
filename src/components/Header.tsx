@@ -54,8 +54,16 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   return (
     <header className="h-14 border-b border-border bg-card/80 backdrop-blur-sm px-4 flex items-center justify-between select-none sticky top-0 z-40 gap-2 shrink-0">
-      {/* Player Transport Controls (Play/Pause, 1x/2x/4x, Mode) placed at the left */}
-      <div className="flex items-center gap-2 shrink-0">
+      {/* Brand & Player Transport Controls (Play/Pause, 1x/2x/4x, Mode) placed at the left */}
+      <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-1.5 font-bold tracking-tight text-foreground text-sm select-none">
+          <span className="text-primary font-mono text-base">⚡</span>
+          <span className="bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent font-extrabold tracking-tight">SimData</span>
+          <Badge variant="outline" className="font-mono text-[10px] px-1.5 py-0 border-border/80 text-muted-foreground font-normal">
+            v1.1.0
+          </Badge>
+        </div>
+
         <div className="flex items-center gap-1.5 bg-secondary/30 border border-border/80 px-2 py-1 rounded-lg shadow-sm">
           {onTogglePlayPause && (
             <Button

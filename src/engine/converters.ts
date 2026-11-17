@@ -434,3 +434,4 @@ export function importBiometricCsv(csvContent: string, filename: string): Conver
     error: `Unrecognized format in "${filename}". Expected SimData, Muse / Mind Monitor, or WESAD CSV headers.`
   };
 }
+
