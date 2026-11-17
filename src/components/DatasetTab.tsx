@@ -10,6 +10,8 @@ import {
   AlertCircle,
   Brain,
   HeartPulse,
+  Sparkles,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
