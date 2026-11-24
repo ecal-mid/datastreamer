@@ -139,11 +139,23 @@ assert(files.includes('meditation_deep_flow.json'), 'meditation_deep_flow.json e
 assert(files.includes('cognitive_stress_overload.json'), 'cognitive_stress_overload.json exists');
 assert(files.includes('respiratory_coherence_training.csv'), 'respiratory_coherence_training.csv exists');
 assert(files.includes('drowsiness_hypnagogia.csv'), 'drowsiness_hypnagogia.csv exists');
+assert(files.includes('acute_stress_trigger.json'), 'acute_stress_trigger.json exists');
+assert(files.includes('sensor_artifact_dropout.json'), 'sensor_artifact_dropout.json exists');
 
 const meditationData = JSON.parse(fs.readFileSync(path.join(recDir, 'meditation_deep_flow.json'), 'utf8'));
 assert(Array.isArray(meditationData), 'Meditation dataset must be an array of frames');
 assert(meditationData.length >= 900, 'Meditation dataset must contain at least 30s @ 30fps (900 frames)');
 console.log(`  Meditation dataset loaded: ${meditationData.length} frames.`);
+
+const acuteStressData = JSON.parse(fs.readFileSync(path.join(recDir, 'acute_stress_trigger.json'), 'utf8'));
+assert(Array.isArray(acuteStressData), 'Acute stress dataset must be an array of frames');
+assert(acuteStressData.length >= 900, 'Acute stress dataset must contain at least 30s @ 30fps (900 frames)');
+console.log(`  Acute stress trigger dataset loaded: ${acuteStressData.length} frames.`);
+
+const artifactData = JSON.parse(fs.readFileSync(path.join(recDir, 'sensor_artifact_dropout.json'), 'utf8'));
+assert(Array.isArray(artifactData), 'Sensor artifact dataset must be an array of frames');
+assert(artifactData.length >= 900, 'Sensor artifact dataset must contain at least 30s @ 30fps (900 frames)');
+console.log(`  Sensor artifact dropout dataset loaded: ${artifactData.length} frames.`);
 
 const csvData = fs.readFileSync(path.join(recDir, 'respiratory_coherence_training.csv'), 'utf8');
 const csvLines = csvData.trim().split('\n');

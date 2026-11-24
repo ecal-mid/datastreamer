@@ -1,0 +1,34 @@
+{
+  "id": "ux_stress_and_artifact_test",
+  "name": "UX Stress & Artifact Resilience Test",
+  "description": "Simulates a complete interactive usability trial: resting baseline, an unexpected acute stress/error trigger, a headset detachment artifact, and guided coherence recovery.",
+  "loop": true,
+  "transitionType": "smooth",
+  "transitionDuration": 3.0,
+  "steps": [
+    {
+      "id": "step_1",
+      "name": "1. Baseline Calm Onboarding",
+      "recordingFile": "meditation_deep_flow.json",
+      "durationSeconds": 20
+    },
+    {
+      "id": "step_2",
+      "name": "2. Sudden Error / Startle Surge",
+      "recordingFile": "acute_stress_trigger.json",
+      "durationSeconds": 25
+    },
+    {
+      "id": "step_3",
+      "name": "3. Sensor Disconnected / Noise",
+      "recordingFile": "sensor_artifact_dropout.json",
+      "durationSeconds": 15
+    },
+    {
+      "id": "step_4",
+      "name": "4. Guided Resonant Recovery",
+      "recordingFile": "respiratory_coherence_training.csv",
+      "durationSeconds": 30
+    }
+  ]
+}

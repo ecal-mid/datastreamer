@@ -190,6 +190,236 @@ function generateCsvRecordings() {
   generateCsv('drowsiness_hypnagogia.csv', 30, 'drowsiness');
 }
 
+function generateAcuteStressTrigger() {
+  const frames = [];
+  const totalSeconds = 30;
+  const fps = 30;
+  const totalFrames = totalSeconds * fps;
+  const startTime = 1773072000000;
+
+  for (let i = 0; i < totalFrames; i++) {
+    const t = i / fps;
+    let bpm, rmssd, coherence, respPhase, respValue, alpha, beta, theta, smr, gamma, delta, tonic, phasic, calm, focus, artifact_flag, state_name;
+
+    if (t < 5.0) {
+      // Phase 1: Calm Baseline (0-5s)
+      const respSin = Math.sin(2 * Math.PI * 0.12 * t);
+      respPhase = respSin >= 0 ? 'inhale' : 'exhale';
+      respValue = Number(((respSin + 1) / 2).toFixed(3));
+      coherence = Number((0.72 + Math.sin(t) * 0.04).toFixed(3));
+      bpm = Number((68.0 + respSin * 3.5).toFixed(1));
+      rmssd = 55.0;
+      alpha = 0.68;
+      beta = 0.28;
+      theta = 0.35;
+      smr = 0.50;
+      gamma = 0.10;
+      delta = 0.25;
+      tonic = 3.6;
+      phasic = 0.01;
+      calm = 0.75;
+      focus = 0.65;
+      artifact_flag = false;
+      state_name = 'Baseline Rest';
+    } else if (t < 16.0) {
+      // Phase 2: Acute Stress / Startle Reaction (5s-16s)
+      const dt = t - 5.0; // 0 to 11s
+
+      // Sudden Phasic EDA surge: sharp spike peaking around dt=1.5s (+1.85 uS), then exponential decay
+      const spikeProfile = dt < 1.5
+        ? Math.sin((dt / 1.5) * (Math.PI / 2)) * 1.85
+        : 1.85 * Math.exp(-(dt - 1.5) / 3.8);
+      phasic = Number(Math.max(0.02, spikeProfile).toFixed(3));
+      tonic = Number((3.6 + Math.min(2.5, dt * 0.3)).toFixed(2));
+
+      // Cardiac response: rapid surge to 105+ BPM, then elevated
+      const bpmSurge = dt < 2.5
+        ? (dt / 2.5) * 38.0
+        : 38.0 * Math.exp(-(dt - 2.5) / 8.0);
+      bpm = Number((68.0 + bpmSurge + (Math.random() - 0.5) * 2.5).toFixed(1));
+      rmssd = Number(Math.max(16.0, 55.0 - (bpmSurge / 38.0) * 36.0).toFixed(1));
+      coherence = Number(Math.max(0.12, 0.72 - (bpmSurge / 38.0) * 0.55).toFixed(3));
+
+      // Respiration: sharp gasp / hold at dt < 1.5s, then rapid shallow breathing (0.36 Hz)
+      if (dt < 1.5) {
+        respPhase = 'inhale';
+        respValue = Number((0.85 + (dt / 1.5) * 0.12).toFixed(3));
+      } else {
+        const rapidSin = Math.sin(2 * Math.PI * 0.36 * (t - 6.5));
+        respPhase = rapidSin >= 0 ? 'inhale' : 'exhale';
+        respValue = Number(((rapidSin + 1) / 2).toFixed(3));
+      }
+
+      // Brainwaves: Alpha collapse, Beta surge
+      const betaBoost = dt < 1.5 ? (dt / 1.5) * 0.55 : 0.55 * Math.exp(-(dt - 1.5) / 10.0);
+      alpha = Number(Math.max(0.12, 0.68 - betaBoost * 0.9).toFixed(3));
+      beta = Number(Math.min(0.92, 0.28 + betaBoost).toFixed(3));
+      theta = 0.20;
+      smr = 0.22;
+      gamma = Number(Math.min(0.60, 0.10 + betaBoost * 0.6).toFixed(3));
+      delta = 0.18;
+
+      calm = Number(Math.max(0.10, 0.75 - betaBoost * 1.1).toFixed(2));
+      focus = 0.40;
+      artifact_flag = false;
+      state_name = 'Acute Stress Trigger';
+    } else {
+      // Phase 3: Post-Stress Recovery (16s-30s)
+      const p = (t - 16.0) / 14.0;
+      const respSin = Math.sin(2 * Math.PI * 0.15 * t);
+      respPhase = respSin >= 0 ? 'inhale' : 'exhale';
+      respValue = Number(((respSin + 1) / 2).toFixed(3));
+
+      bpm = Number((82.0 - p * 12.0 + respSin * 3.0).toFixed(1));
+      rmssd = Number((28.0 + p * 22.0).toFixed(1));
+      coherence = Number((0.35 + p * 0.32).toFixed(3));
+
+      alpha = Number((0.28 + p * 0.32).toFixed(3));
+      beta = Number((0.52 - p * 0.20).toFixed(3));
+      theta = 0.32;
+      smr = 0.42;
+      gamma = 0.15;
+      delta = 0.24;
+
+      tonic = Number((5.5 - p * 1.5).toFixed(2));
+      phasic = Number((0.15 * (1 - p) + 0.01).toFixed(3));
+      calm = Number((0.35 + p * 0.35).toFixed(2));
+      focus = Number((0.45 + p * 0.18).toFixed(2));
+      artifact_flag = false;
+      state_name = 'Stress Recovery';
+    }
+
+    frames.push({
+      timestamp: startTime + Math.round(t * 1000),
+      mode: 'playback',
+      biometrics: {
+        eeg: { alpha, beta, theta, smr, gamma, delta },
+        hrv: { bpm, rmssd, coherence },
+        respiration: { phase: respPhase, value: respValue },
+        eda: { tonic, phasic }
+      },
+      states: {
+        calm_index: calm,
+        focus_index: focus,
+        artifact_flag,
+        state_name
+      }
+    });
+  }
+
+  fs.writeFileSync(path.join(targetDir, 'acute_stress_trigger.json'), JSON.stringify(frames, null, 2));
+  console.log('Generated acute_stress_trigger.json');
+}
+
+function generateSensorArtifactDropout() {
+  const frames = [];
+  const totalSeconds = 30;
+  const fps = 30;
+  const totalFrames = totalSeconds * fps;
+  const startTime = 1773072000000;
+
+  for (let i = 0; i < totalFrames; i++) {
+    const t = i / fps;
+    let bpm, rmssd, coherence, respPhase, respValue, alpha, beta, theta, smr, gamma, delta, tonic, phasic, calm, focus, artifact_flag, state_name;
+
+    if (t < 6.0) {
+      // Phase 1: Clean Baseline Contact (0-6s)
+      const respSin = Math.sin(2 * Math.PI * 0.12 * t);
+      respPhase = respSin >= 0 ? 'inhale' : 'exhale';
+      respValue = Number(((respSin + 1) / 2).toFixed(3));
+      coherence = 0.65;
+      bpm = Number((70.0 + respSin * 3.0).toFixed(1));
+      rmssd = 48.0;
+      alpha = 0.62;
+      beta = 0.32;
+      theta = 0.36;
+      smr = 0.48;
+      gamma = 0.12;
+      delta = 0.22;
+      tonic = 4.2;
+      phasic = 0.02;
+      calm = 0.68;
+      focus = 0.62;
+      artifact_flag = false;
+      state_name = 'Baseline Rest';
+    } else if (t < 16.0) {
+      // Phase 2: Sensor Detachment & Heavy Noise Burst (6s-16s)
+      artifact_flag = true;
+      state_name = 'Sensor Detached / Noise';
+
+      // Chaotic high EMG saturation across frequency bands
+      alpha = Number((0.85 + Math.random() * 0.14).toFixed(3));
+      beta = Number((0.92 + Math.random() * 0.08).toFixed(3));
+      gamma = Number((0.95 + Math.random() * 0.05).toFixed(3));
+      delta = Number((0.88 + Math.random() * 0.11).toFixed(3));
+      theta = Number((0.82 + Math.random() * 0.15).toFixed(3));
+      smr = 0.30;
+
+      // Pulse reading drops out or is erratic
+      bpm = Number((115.0 + (Math.random() - 0.5) * 20.0).toFixed(1));
+      rmssd = 5.0;
+      coherence = 0.02;
+
+      respPhase = Math.random() > 0.5 ? 'inhale' : 'exhale';
+      respValue = Number(Math.random().toFixed(3));
+
+      tonic = Number((4.2 + (Math.random() - 0.5) * 3.0).toFixed(2));
+      phasic = Number((Math.random() * 1.5).toFixed(3));
+
+      calm = 0.05;
+      focus = 0.05;
+    } else {
+      // Phase 3: Re-attachment & Signal Stabilization (16s-30s)
+      const p = Math.min(1.0, (t - 16.0) / 4.0);
+      artifact_flag = false;
+      state_name = p < 0.6 ? 'Stabilizing Signal' : 'Baseline Rest';
+
+      const respSin = Math.sin(2 * Math.PI * 0.12 * (t - 16.0));
+      respPhase = respSin >= 0 ? 'inhale' : 'exhale';
+      respValue = Number(((respSin + 1) / 2).toFixed(3));
+
+      bpm = Number((85.0 - p * 15.0 + respSin * 3.0).toFixed(1));
+      rmssd = Number((15.0 + p * 33.0).toFixed(1));
+      coherence = Number((0.15 + p * 0.50).toFixed(3));
+
+      alpha = Number((0.30 + p * 0.32).toFixed(3));
+      beta = Number((0.70 - p * 0.38).toFixed(3));
+      gamma = Number((0.50 - p * 0.38).toFixed(3));
+      delta = Number((0.45 - p * 0.23).toFixed(3));
+      theta = Number((0.40 - p * 0.04).toFixed(3));
+      smr = Number((0.25 + p * 0.23).toFixed(3));
+
+      tonic = Number((5.0 - p * 0.8).toFixed(2));
+      phasic = Number((0.10 * (1 - p) + 0.01).toFixed(3));
+
+      calm = Number((0.20 + p * 0.48).toFixed(2));
+      focus = Number((0.30 + p * 0.32).toFixed(2));
+    }
+
+    frames.push({
+      timestamp: startTime + Math.round(t * 1000),
+      mode: 'playback',
+      biometrics: {
+        eeg: { alpha, beta, theta, smr, gamma, delta },
+        hrv: { bpm, rmssd, coherence },
+        respiration: { phase: respPhase, value: respValue },
+        eda: { tonic, phasic }
+      },
+      states: {
+        calm_index: calm,
+        focus_index: focus,
+        artifact_flag,
+        state_name
+      }
+    });
+  }
+
+  fs.writeFileSync(path.join(targetDir, 'sensor_artifact_dropout.json'), JSON.stringify(frames, null, 2));
+  console.log('Generated sensor_artifact_dropout.json');
+}
+
 generateMeditationSession();
 generateStressSession();
 generateCsvRecordings();
+generateAcuteStressTrigger();
+generateSensorArtifactDropout();
