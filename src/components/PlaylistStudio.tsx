@@ -599,14 +599,14 @@ export const PlaylistStudio: React.FC<PlaylistStudioProps> = ({
               <React.Fragment key={step.id || idx}>
                 {/* Step Card */}
                 <div
-                  className={`flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 p-2.5 rounded-lg border transition-all ${
+                  className={`flex flex-col lg:flex-row lg:items-center justify-between gap-2.5 p-2.5 rounded-lg border transition-all ${
                     isStepActive
                       ? 'bg-primary/10 border-primary shadow-[0_0_10px_#06b6d418]'
                       : 'bg-secondary/30 hover:bg-secondary/40 border-border/80'
                   }`}
                 >
                   {/* Left: Step Index & Title Input */}
-                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <div className="flex items-center gap-2 min-w-0 flex-1 w-full lg:w-auto">
                     <Badge
                       variant={isStepActive ? 'cyan' : 'secondary'}
                       className="font-mono text-xs px-2 shrink-0"
@@ -625,84 +625,87 @@ export const PlaylistStudio: React.FC<PlaylistStudioProps> = ({
                       value={step.name || ''}
                       onChange={(e) => handleUpdateStep(idx, { name: e.target.value })}
                       placeholder={`Stage ${idx + 1}`}
-                      className="bg-transparent border-b border-border/60 focus:border-primary px-1.5 py-0.5 text-xs font-semibold text-foreground focus:outline-none flex-1 min-w-[160px] mr-2 transition-all"
+                      className="bg-transparent border-b border-border/60 focus:border-primary px-1.5 py-0.5 text-xs font-semibold text-foreground focus:outline-none flex-1 min-w-[200px] transition-all"
                       title={step.name || `Stage ${idx + 1}`}
                     />
                   </div>
 
-                  {/* Middle: Recording File Selector */}
-                  <div className="flex items-center gap-1.5 min-w-0 shrink-0">
-                    <select
-                      value={step.recordingFile}
-                      onChange={(e) => handleUpdateStep(idx, { recordingFile: e.target.value })}
-                      className="bg-secondary/70 border border-border rounded px-2 py-1 text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary max-w-[260px] truncate"
-                      title={step.recordingFile}
-                    >
-                      {availableDatasets.map((f) => (
-                        <option key={f} value={f}>
-                          {f}
-                        </option>
-                      ))}
-                    </select>
-
-                    <Badge
-                      variant={isMuse ? 'cyan' : isWesad ? 'cyan' : isJson ? 'warning' : 'success'}
-                      className={`text-[9px] font-mono shrink-0 ${
-                        isMuse ? 'bg-purple-500/20 text-purple-300' : isWesad ? 'bg-red-500/20 text-red-300' : ''
-                      }`}
-                    >
-                      {isMuse ? 'MUSE' : isWesad ? 'WESAD' : isJson ? 'JSON' : 'CSV'}
-                    </Badge>
-                  </div>
-
-                  {/* Right: Duration Selector & Reorder / Delete Controls */}
-                  <div className="flex items-center gap-2 shrink-0">
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-3 h-3 text-muted-foreground" />
+                  {/* Right Group: Recording File Selector, Duration, and Controls */}
+                  <div className="flex flex-wrap sm:flex-nowrap items-center justify-between lg:justify-end gap-2.5 shrink-0 w-full lg:w-auto pt-1 lg:pt-0 border-t lg:border-t-0 border-border/40">
+                    {/* Recording File Selector */}
+                    <div className="flex items-center gap-1.5 min-w-0">
                       <select
-                        value={step.durationSeconds}
-                        onChange={(e) =>
-                          handleUpdateStep(idx, { durationSeconds: parseInt(e.target.value, 10) })
-                        }
-                        className="bg-secondary/70 border border-border rounded px-1.5 py-1 text-xs font-mono text-foreground focus:outline-none"
+                        value={step.recordingFile}
+                        onChange={(e) => handleUpdateStep(idx, { recordingFile: e.target.value })}
+                        className="bg-secondary/70 border border-border rounded px-2 py-1 text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary max-w-[220px] truncate"
+                        title={step.recordingFile}
                       >
-                        {DURATION_OPTIONS.map((opt) => (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.label}
+                        {availableDatasets.map((f) => (
+                          <option key={f} value={f}>
+                            {f}
                           </option>
                         ))}
                       </select>
+
+                      <Badge
+                        variant={isMuse ? 'cyan' : isWesad ? 'cyan' : isJson ? 'warning' : 'success'}
+                        className={`text-[9px] font-mono shrink-0 ${
+                          isMuse ? 'bg-purple-500/20 text-purple-300' : isWesad ? 'bg-red-500/20 text-red-300' : ''
+                        }`}
+                      >
+                        {isMuse ? 'MUSE' : isWesad ? 'WESAD' : isJson ? 'JSON' : 'CSV'}
+                      </Badge>
                     </div>
 
-                    {/* Move Up / Move Down */}
-                    <div className="flex items-center">
+                    {/* Duration Selector & Reorder / Delete Controls */}
+                    <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-muted-foreground" />
+                        <select
+                          value={step.durationSeconds}
+                          onChange={(e) =>
+                            handleUpdateStep(idx, { durationSeconds: parseInt(e.target.value, 10) })
+                          }
+                          className="bg-secondary/70 border border-border rounded px-1.5 py-1 text-xs font-mono text-foreground focus:outline-none"
+                        >
+                          {DURATION_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Move Up / Move Down */}
+                      <div className="flex items-center">
+                        <button
+                          onClick={() => handleMoveStep(idx, 'up')}
+                          disabled={idx === 0}
+                          className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-20 cursor-pointer"
+                          title="Move stage up"
+                        >
+                          <ArrowUp className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleMoveStep(idx, 'down')}
+                          disabled={idx === draft.steps.length - 1}
+                          className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-20 cursor-pointer"
+                          title="Move stage down"
+                        >
+                          <ArrowDown className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      {/* Delete Stage */}
                       <button
-                        onClick={() => handleMoveStep(idx, 'up')}
-                        disabled={idx === 0}
-                        className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-20 cursor-pointer"
-                        title="Move stage up"
+                        onClick={() => handleRemoveStep(idx)}
+                        disabled={draft.steps.length <= 1}
+                        className="p-1 text-muted-foreground hover:text-destructive disabled:opacity-20 cursor-pointer"
+                        title="Remove stage"
                       >
-                        <ArrowUp className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => handleMoveStep(idx, 'down')}
-                        disabled={idx === draft.steps.length - 1}
-                        className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-20 cursor-pointer"
-                        title="Move stage down"
-                      >
-                        <ArrowDown className="w-3.5 h-3.5" />
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
-
-                    {/* Delete Stage */}
-                    <button
-                      onClick={() => handleRemoveStep(idx)}
-                      disabled={draft.steps.length <= 1}
-                      className="p-1 text-muted-foreground hover:text-destructive disabled:opacity-20 cursor-pointer"
-                      title="Remove stage"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
                   </div>
                 </div>
 

@@ -16,7 +16,13 @@ import {
   Flame,
   Moon,
   Clock,
-  ArrowRight
+  ArrowRight,
+  ShieldAlert,
+  Eye,
+  Radio,
+  CheckCircle2,
+  SlidersHorizontal,
+  AlertCircle
 } from 'lucide-react';
 import {
   Dialog,
@@ -67,7 +73,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                   <Badge variant="cyan" className="text-[10px] font-mono px-1.5 py-0">v1.2.0</Badge>
                 </DialogTitle>
                 <DialogDescription className="text-xs text-muted-foreground mt-0.5">
-                  Clear explanations of all biometric terms, calculations, and Figma prototyping tips.
+                  Clear explanations of biometric terms, calculations, sensor artifacts, and Figma prototyping recipes.
                 </DialogDescription>
               </div>
             </div>
@@ -80,7 +86,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search any term (e.g., 'breathing', 'RSA', 'alpha', 'stress', 'sweat')..."
+              placeholder="Search any term (e.g., 'artifact', 'blink', 'clench', 'stress', 'EDA', 'respiration')..."
               className="w-full bg-secondary/60 border border-border/80 rounded-md pl-9 pr-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono transition-all"
             />
             {searchQuery && (
@@ -125,7 +131,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
           <TabsContent value="glossary" className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 mt-0">
             {filteredGlossary.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground font-mono text-xs">
-                No terms matching &quot;{searchQuery}&quot;. Try searching for &quot;alpha&quot;, &quot;bpm&quot;, &quot;coherence&quot;, or &quot;stress&quot;.
+                No terms matching &quot;{searchQuery}&quot;. Try searching for &quot;artifact&quot;, &quot;blink&quot;, &quot;clench&quot;, &quot;alpha&quot;, &quot;bpm&quot;, or &quot;stress&quot;.
               </div>
             ) : (
               filteredGlossary.map((item) => (
@@ -162,35 +168,35 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
             )}
           </TabsContent>
 
-          {/* Tab 2: How Signals Connect (Physiological Coupling) */}
+          {/* Tab 2: How Signals Connect (Physiological Coupling & Artifacts) */}
           <TabsContent value="connections" className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 mt-0">
             <div className="text-xs text-muted-foreground leading-relaxed">
-              Your body is a single closed-loop ecosystem. When you change how you breathe, your heart responds within seconds. When you experience mental stress, your skin sweat and brainwaves instantly shift. SimData models these <strong>chain reactions</strong> in real time:
+              Your body functions as an interconnected physiological system. When your breathing changes, your pulse responds within seconds. When cognitive demand increases, your skin sweat and brain rhythms shift simultaneously. SimData models these connections and differentiates genuine bodily shifts from physical sensor noise:
             </div>
 
             {/* Coupling 1: Breathing -> Heart (RSA) */}
             <Card className="bg-secondary/25 border-cyan-500/30 p-4 space-y-3">
               <div className="flex items-center gap-2 text-sm font-bold text-cyan-400">
                 <Wind className="w-4 h-4" />
-                <span>Chain Reaction 1: The Breath & Heart Dance (RSA)</span>
+                <span>Chain Reaction 1: Breath & Heart Coupling (RSA)</span>
               </div>
               <p className="text-xs text-foreground/90 leading-relaxed">
-                Ever notice your pulse accelerate when you take a big deep breath in, and gently slow down when you exhale? That natural rhythm is called <strong>Respiratory Sinus Arrhythmia (RSA)</strong>.
+                When you inhale, your heart rate increases. When you exhale, your heart rate decreases. This natural respiratory modulation is called <strong>Respiratory Sinus Arrhythmia (RSA)</strong>.
               </p>
               <div className="bg-card/60 p-3 rounded-lg border border-border/60 text-xs font-mono space-y-2">
                 <div className="flex items-center gap-2 text-cyan-300">
-                  <span>🌬️ Inhale</span>
+                  <span>Inhalation</span>
                   <ArrowRight className="w-3.5 h-3.5" />
-                  <span>Lungs expand &rarr; Vagus nerve releases brake &rarr; <strong>Heart accelerates (BPM &uarr;)</strong></span>
+                  <span>Thoracic pressure shifts &rarr; Vagus nerve activity decreases &rarr; <strong>Heart rate increases (BPM &uarr;)</strong></span>
                 </div>
                 <div className="flex items-center gap-2 text-emerald-300">
-                  <span>💨 Exhale</span>
+                  <span>Exhalation</span>
                   <ArrowRight className="w-3.5 h-3.5" />
-                  <span>Lungs deflate &rarr; Vagus nerve applies gentle brake &rarr; <strong>Heart decelerates (BPM &darr;)</strong></span>
+                  <span>Thoracic pressure resets &rarr; Vagus nerve activity increases &rarr; <strong>Heart rate decreases (BPM &darr;)</strong></span>
                 </div>
               </div>
               <p className="text-[11px] text-muted-foreground font-mono">
-                <strong>Why it matters:</strong> A rigid, mechanical pulse is a sign of extreme fatigue or distress. A lively, wave-like pulse that matches your breath indicates a healthy, flexible nervous system.
+                <strong>Why it matters:</strong> A rigid, unvarying heart rate reflects autonomic exhaustion or high stress. A flexible heart rate that rises and falls with breathing indicates healthy autonomic regulation.
               </p>
             </Card>
 
@@ -198,23 +204,23 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
             <Card className="bg-secondary/25 border-amber-500/30 p-4 space-y-3">
               <div className="flex items-center gap-2 text-sm font-bold text-amber-400">
                 <Flame className="w-4 h-4" />
-                <span>Chain Reaction 2: The Mental Stress Surge</span>
+                <span>Chain Reaction 2: The Mental Stress Response</span>
               </div>
               <p className="text-xs text-foreground/90 leading-relaxed">
-                When you encounter a difficult deadline, unexpected danger, or cognitive overload, your &quot;fight-or-flight&quot; (sympathetic) nervous system takes the steering wheel:
+                When cognitive workload spikes, deadlines approach, or unexpected errors occur, the sympathetic branch of the autonomic nervous system activates:
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs font-mono">
                 <div className="bg-card/50 p-2.5 rounded border border-border/40">
                   <span className="text-amber-400 font-bold block mb-1">1. Brainwaves</span>
-                  Calm <strong>Alpha</strong> collapses (0.15), while busy <strong>Beta</strong> surges (0.85) as your brain scans for solutions.
+                  Calm <strong>Alpha</strong> decreases (0.15), while analytical <strong>Beta</strong> increases (0.85) as processing demand climbs.
                 </div>
                 <div className="bg-card/50 p-2.5 rounded border border-border/40">
-                  <span className="text-red-400 font-bold block mb-1">2. Heart & Breath</span>
-                  Heart rate accelerates (95+ BPM) and breathing turns shallow, rapid, and disjointed.
+                  <span className="text-red-400 font-bold block mb-1">2. Heart & Respiration</span>
+                  Heart rate accelerates (95+ BPM) and breathing turns rapid, shallow, and irregular.
                 </div>
                 <div className="bg-card/50 p-2.5 rounded border border-border/40">
-                  <span className="text-orange-400 font-bold block mb-1">3. Skin Sweat</span>
-                  Microscopic sweat glands on palms activate, causing sharp <strong>Phasic EDA spikes</strong> and elevated tonic sweat.
+                  <span className="text-orange-400 font-bold block mb-1">3. Skin Conductance</span>
+                  Palm sweat glands activate, creating immediate <strong>Phasic EDA spikes</strong> and elevated baseline skin conductance.
                 </div>
               </div>
             </Card>
@@ -223,21 +229,66 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
             <Card className="bg-secondary/25 border-emerald-500/30 p-4 space-y-3">
               <div className="flex items-center gap-2 text-sm font-bold text-emerald-400">
                 <Activity className="w-4 h-4" />
-                <span>Chain Reaction 3: Deep Resonance & Coherence</span>
+                <span>Chain Reaction 3: Resonant Breathing & Coherence</span>
               </div>
               <p className="text-xs text-foreground/90 leading-relaxed">
-                When you deliberately slow down your breathing to about <strong>6 breaths per minute</strong> (0.10 Hz), your blood pressure waves, breathing rhythm, and heart rate lock into a beautiful, harmonic standing wave called <strong>Resonant Coherence</strong>.
+                When you pace your breathing to approximately <strong>6 breaths per minute</strong> (0.10 Hz), blood pressure oscillations (Mayer waves) and respiratory cycles synchronize into a rhythmic pattern called <strong>Resonant Coherence</strong>.
               </p>
               <div className="bg-card/60 p-3 rounded-lg border border-border/60 text-xs font-mono text-emerald-300">
-                Coherence Score climbs to <strong>0.85 – 0.95</strong>. Alpha brainwaves flourish, skin sweat dries out, and your Calm Index hits maximum.
+                Coherence Score reaches <strong>0.85 – 0.95</strong>. Alpha brainwaves increase, skin conductance stabilizes, and the Calm Index reaches its highest level.
+              </div>
+            </Card>
+
+            {/* Coupling 4: Real Stress vs. Sensor Artifacts */}
+            <Card className="bg-secondary/25 border-purple-500/30 p-4 space-y-3">
+              <div className="flex items-center gap-2 text-sm font-bold text-purple-400">
+                <ShieldAlert className="w-4 h-4" />
+                <span>Chain Reaction 4: Distinguishing Real Stress from Physical Sensor Artifacts</span>
+              </div>
+              <p className="text-xs text-foreground/90 leading-relaxed">
+                A central challenge in biofeedback interface design is distinguishing between genuine psychological states and physical sensor noise. Physical movements produce large electrical deflections that can easily fool simplistic threshold algorithms:
+              </p>
+
+              <div className="space-y-2 text-xs font-mono">
+                <div className="bg-card/50 p-2.5 rounded border border-border/40">
+                  <span className="text-emerald-400 font-bold block mb-0.5">Genuine Physiological Stress:</span>
+                  <span className="text-foreground/90">
+                    Coordinated across multiple bodily systems: Heart rate accelerates, breathing quickens, skin sweat spikes (Phasic EDA), and Alpha brainwaves drop. All sensors change in physiological harmony.
+                  </span>
+                </div>
+
+                <div className="bg-card/50 p-2.5 rounded border border-border/40">
+                  <span className="text-amber-400 font-bold block mb-0.5">Jaw Clenching or Chewing (EMG Noise):</span>
+                  <span className="text-foreground/90">
+                    Generates huge high-frequency electrical bursts (20 – 100+ Hz) that overwhelm EEG brainwave sensors. However, heart rate, respiration, and skin sweat remain completely normal.
+                  </span>
+                </div>
+
+                <div className="bg-card/50 p-2.5 rounded border border-border/40">
+                  <span className="text-cyan-400 font-bold block mb-0.5">Eye Blinks & Rapid Eye Movements (EOG Spikes):</span>
+                  <span className="text-foreground/90">
+                    The eyeball electrical potential creates a brief 200 ms spike on forehead electrodes. It is localized strictly to frontal sensors and disappears immediately.
+                  </span>
+                </div>
+
+                <div className="bg-card/50 p-2.5 rounded border border-border/40">
+                  <span className="text-red-400 font-bold block mb-0.5">Loose Sensor or Hardware Detachment:</span>
+                  <span className="text-foreground/90">
+                    Contact resistance jumps to maximum, causing the signal to flatline to zero or pick up 50/60 Hz powerline hum. SimData flags this condition by setting <strong className="text-primary font-bold">bio_artifact = true</strong>.
+                  </span>
+                </div>
+              </div>
+
+              <div className="bg-card/60 p-3 rounded-lg border border-border/60 text-xs font-mono text-muted-foreground">
+                <strong className="text-primary">Interaction Design Rule:</strong> When <code className="text-foreground">bio_artifact</code> is true, the interface should never tell the user they are stressed or dock points. Instead, display a subtle sensor adjustment alert or gently pause active feedback until contact is restored.
               </div>
             </Card>
           </TabsContent>
 
-          {/* Tab 3: States & Archetypes Matrix */}
+          {/* Tab 3: States & Scenarios Matrix */}
           <TabsContent value="archetypes" className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 mt-0">
             <div className="text-xs text-muted-foreground leading-relaxed">
-              SimData groups complex biometric numbers into recognizable human states. You can switch between these with 1 click in the <strong>Presets</strong> tab, or chain them together in <strong>Scenario Playlists</strong>:
+              SimData groups continuous biometric streams into distinct human states. You can trigger these states in the <strong>Presets</strong> tab, stream them from pre-recorded datasets, or chain them together in <strong>Scenario Playlists</strong>:
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -251,13 +302,14 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                   <Badge variant="outline" className="text-[10px] font-mono">Resting</Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Your regular, everyday resting state while reading or relaxed at a desk.
+                  Normal resting state during quiet reading or seated office work.
                 </p>
                 <div className="bg-card/50 p-2 rounded text-[11px] font-mono space-y-1 text-muted-foreground">
-                  <div>• Heart: <strong className="text-foreground">~70 BPM</strong> (balanced)</div>
+                  <div>• Heart: <strong className="text-foreground">~70 BPM</strong> (steady)</div>
                   <div>• Breathing: <strong className="text-foreground">~10 breaths/min</strong></div>
                   <div>• Brain: Moderate <strong className="text-cyan-400">Alpha 0.50</strong> & <strong className="text-amber-400">Beta 0.35</strong></div>
-                  <div>• Coherence: <strong className="text-emerald-400">0.50</strong> (steady)</div>
+                  <div>• Coherence: <strong className="text-emerald-400">0.50</strong> (balanced)</div>
+                  <div>• Artifact: <strong className="text-emerald-400">false (clean)</strong></div>
                 </div>
               </Card>
 
@@ -268,16 +320,17 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                     <Sparkles className="w-4 h-4" />
                     <span>Deep Meditation / Flow</span>
                   </div>
-                  <Badge variant="cyan" className="text-[10px] font-mono">Zen / Focus</Badge>
+                  <Badge variant="cyan" className="text-[10px] font-mono">Focus / Calm</Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Complete mental absorption, mindfulness, or calm creative flow without stress.
+                  High mental absorption, focused mindfulness, or relaxed creative flow.
                 </p>
                 <div className="bg-card/50 p-2 rounded text-[11px] font-mono space-y-1 text-muted-foreground">
                   <div>• Heart: <strong className="text-foreground">~60 BPM</strong> (slow, peaceful)</div>
-                  <div>• Breathing: <strong className="text-foreground">6 breaths/min</strong> (resonant)</div>
+                  <div>• Breathing: <strong className="text-foreground">6 breaths/min</strong> (resonant pace)</div>
                   <div>• Brain: High <strong className="text-cyan-400">Alpha 0.85</strong> & <strong className="text-purple-400">SMR 0.70</strong></div>
-                  <div>• Coherence: Peak <strong className="text-emerald-400">0.85+</strong> (harmonic)</div>
+                  <div>• Coherence: Peak <strong className="text-emerald-400">0.85+</strong> (synchronized)</div>
+                  <div>• Artifact: <strong className="text-emerald-400">false (clean)</strong></div>
                 </div>
               </Card>
 
@@ -288,16 +341,17 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                     <Flame className="w-4 h-4" />
                     <span>Cognitive Stress / Overload</span>
                   </div>
-                  <Badge variant="warning" className="text-[10px] font-mono">Pressure</Badge>
+                  <Badge variant="warning" className="text-[10px] font-mono">High Demand</Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Intense mental effort, anxiety, multitasking under pressure, or sensory overload.
+                  Prolonged analytical strain, multitasking pressure, or high task difficulty.
                 </p>
                 <div className="bg-card/50 p-2 rounded text-[11px] font-mono space-y-1 text-muted-foreground">
-                  <div>• Heart: <strong className="text-red-400">~98 BPM</strong> (racing pulse)</div>
-                  <div>• Breathing: <strong className="text-foreground">18 breaths/min</strong> (shallow)</div>
-                  <div>• Brain: Surging <strong className="text-amber-400">Beta 0.85</strong>, low Alpha</div>
+                  <div>• Heart: <strong className="text-red-400">~98 BPM</strong> (elevated pulse)</div>
+                  <div>• Breathing: <strong className="text-foreground">18 breaths/min</strong> (rapid, shallow)</div>
+                  <div>• Brain: High <strong className="text-amber-400">Beta 0.85</strong>, low Alpha (0.15)</div>
                   <div>• Skin: Frequent <strong className="text-orange-400">sweat spikes</strong></div>
+                  <div>• Artifact: <strong className="text-emerald-400">false (clean)</strong></div>
                 </div>
               </Card>
 
@@ -311,13 +365,56 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                   <Badge variant="secondary" className="text-[10px] font-mono">Fatigue</Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Extreme tiredness, daydreaming, nodding off, or twilight sleep transition.
+                  Mental fatigue, daydreaming, drifting off, or pre-sleep transition.
                 </p>
                 <div className="bg-card/50 p-2 rounded text-[11px] font-mono space-y-1 text-muted-foreground">
                   <div>• Heart: <strong className="text-foreground">~54 BPM</strong> (deep resting)</div>
-                  <div>• Breathing: <strong className="text-foreground">Slow & shallow</strong></div>
+                  <div>• Breathing: <strong className="text-foreground">Slow, irregular</strong></div>
                   <div>• Brain: High <strong className="text-purple-400">Theta 0.80</strong> & <strong className="text-indigo-400">Delta 0.65</strong></div>
-                  <div>• Skin: Collapsing sweat (<strong className="text-muted-foreground">2.1 uS</strong>)</div>
+                  <div>• Skin: Very low sweat baseline (<strong className="text-muted-foreground">2.1 µS</strong>)</div>
+                  <div>• Artifact: <strong className="text-emerald-400">false (clean)</strong></div>
+                </div>
+              </Card>
+
+              {/* Acute Stress Trigger */}
+              <Card className="bg-secondary/25 border-red-500/30 p-3.5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 font-bold text-sm text-red-400">
+                    <AlertTriangle className="w-4 h-4" />
+                    <span>Acute Stress Trigger / Startle</span>
+                  </div>
+                  <Badge variant="destructive" className="text-[10px] font-mono">Sudden Shock</Badge>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Immediate physiological reaction to an unexpected error modal, alarm, or critical failure.
+                </p>
+                <div className="bg-card/50 p-2 rounded text-[11px] font-mono space-y-1 text-muted-foreground">
+                  <div>• Heart: Rapid jump to <strong className="text-red-400">105+ BPM</strong> in seconds</div>
+                  <div>• Skin: Sharp <strong className="text-orange-400">Phasic EDA surge (2.5 µS)</strong></div>
+                  <div>• Brain: Immediate drop in Alpha; Beta climbs to <strong className="text-amber-400">0.90</strong></div>
+                  <div>• Coherence: Collapses below <strong className="text-red-400">0.20</strong></div>
+                  <div>• Available in: <code className="text-primary text-[10px]">acute_stress_trigger.json</code></div>
+                </div>
+              </Card>
+
+              {/* Sensor Detached / Hardware Artifact */}
+              <Card className="bg-secondary/25 border-amber-500/30 p-3.5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 font-bold text-sm text-amber-400">
+                    <ShieldAlert className="w-4 h-4" />
+                    <span>Sensor Detached / Hardware Artifact</span>
+                  </div>
+                  <Badge variant="warning" className="text-[10px] font-mono">Hardware Noise</Badge>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Sensor slips off, electrode loses contact with skin, or severe motion artifact occurs.
+                </p>
+                <div className="bg-card/50 p-2 rounded text-[11px] font-mono space-y-1 text-muted-foreground">
+                  <div>• Artifact Flag: <strong className="text-red-400 font-bold">bio_artifact = true</strong></div>
+                  <div>• Heart: Pulse readout drops to <strong className="text-foreground">0 BPM</strong> or freezes</div>
+                  <div>• Brain: Flatline or 50/60 Hz electrical interference</div>
+                  <div>• Skin: Circuit disconnect (drops to <strong className="text-foreground">0.0 µS</strong>)</div>
+                  <div>• Available in: <code className="text-primary text-[10px]">sensor_artifact_dropout.json</code></div>
                 </div>
               </Card>
             </div>
@@ -326,61 +423,74 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
           {/* Tab 4: Figma Design Recipes */}
           <TabsContent value="recipes" className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 mt-0">
             <div className="text-xs text-muted-foreground leading-relaxed">
-              Step-by-step recipes for connecting SimData&apos;s 8 native Figma variables (<code className="text-primary font-mono">BioData</code> collection) directly to UI elements on your Figma canvas:
+              Step-by-step instructions for connecting SimData&apos;s native Figma variables (<code className="text-primary font-mono">BioData</code> collection) to prototype components:
             </div>
 
             {/* Recipe 1: Adaptive Component Variants */}
             <Card className="bg-secondary/25 border-purple-500/30 p-3.5 space-y-2.5">
               <div className="flex items-center gap-2 font-bold text-sm text-purple-400">
                 <Layers className="w-4 h-4" />
-                <span>Recipe 1: Swap UI Layouts Automatically with `bio_state`</span>
+                <span>Recipe 1: Switch UI Layouts Automatically with `bio_state`</span>
               </div>
               <p className="text-xs text-foreground/90 leading-relaxed">
-                Want your interface to smoothly transition from a friendly dashboard into an emergency calm-down modal when the user gets stressed?
+                Allow your interface to change layouts or switch color modes when the user moves between cognitive states:
               </p>
               <ol className="list-decimal list-inside space-y-1 text-xs font-mono text-muted-foreground bg-card/60 p-3 rounded border border-border/50">
                 <li>Create a Figma Component with a Variant property named <strong className="text-foreground">&quot;State&quot;</strong>.</li>
-                <li>Name the variants: <strong className="text-foreground">&quot;Baseline&quot;</strong>, <strong className="text-foreground">&quot;Deep Flow&quot;</strong>, and <strong className="text-foreground">&quot;Cognitive Stress&quot;</strong>.</li>
+                <li>Name the variants: <strong className="text-foreground">&quot;Baseline / Neutral&quot;</strong>, <strong className="text-foreground">&quot;Deep Meditation / Flow&quot;</strong>, and <strong className="text-foreground">&quot;Cognitive Stress&quot;</strong>.</li>
                 <li>In the right design sidebar, bind the component variant directly to the string variable <strong className="text-primary">bio_state</strong>.</li>
-                <li>In SimData, click <strong className="text-amber-400">Cognitive Stress</strong> or play a scenario playlist. Your Figma prototype will switch variants on the canvas in real time!</li>
+                <li>In SimData, change presets or run a scenario playlist. Your Figma prototype will switch variants on canvas in real time.</li>
               </ol>
             </Card>
 
-            {/* Recipe 2: The Breathing Circle */}
+            {/* Recipe 2: The Breathing Pacer */}
             <Card className="bg-secondary/25 border-cyan-500/30 p-3.5 space-y-2.5">
               <div className="flex items-center gap-2 font-bold text-sm text-cyan-400">
                 <Wind className="w-4 h-4" />
-                <span>Recipe 2: The Organic Breathing Bubble</span>
+                <span>Recipe 2: Dynamic Breathing Pacer with `bio_respiration`</span>
               </div>
               <p className="text-xs text-foreground/90 leading-relaxed">
-                Create a soothing breath-pacer circle that expands on inhalation and contracts on exhalation:
+                Create a visual breathing indicator that expands during inhalation and contracts during exhalation:
               </p>
               <ol className="list-decimal list-inside space-y-1 text-xs font-mono text-muted-foreground bg-card/60 p-3 rounded border border-border/50">
-                <li>Draw an Ellipse or Frame (e.g. 100 &times; 100 px) with a soft gradient.</li>
-                <li>Bind its <strong>Width</strong> and <strong>Height</strong> to <strong className="text-primary">bio_respiration</strong> (or bind it to <strong>Corner Radius</strong> / <strong>Layer Opacity</strong>).</li>
-                <li>Watch the circle breathe in sync with SimData&apos;s live 30 Hz stream!</li>
+                <li>Draw an Ellipse or Frame (e.g. 120 &times; 120 px) in Figma.</li>
+                <li>Bind its <strong>Width</strong> and <strong>Height</strong> to <strong className="text-primary">bio_respiration</strong> (or bind it to <strong>Layer Opacity</strong> or <strong>Corner Radius</strong>).</li>
+                <li>Watch the circle expand and contract smoothly in sync with SimData&apos;s live 30 Hz stream.</li>
               </ol>
             </Card>
 
-            {/* Recipe 3: Heart Rate & Warning Alert */}
-            <Card className="bg-secondary/25 border-emerald-500/30 p-3.5 space-y-2.5">
-              <div className="flex items-center gap-2 font-bold text-sm text-emerald-400">
-                <Heart className="w-4 h-4" />
-                <span>Recipe 3: Live Pulse Counter & Artifact Alert Banner</span>
+            {/* Recipe 3: Sensor Disconnect Alert & Graceful Degradation */}
+            <Card className="bg-secondary/25 border-amber-500/30 p-3.5 space-y-2.5">
+              <div className="flex items-center gap-2 font-bold text-sm text-amber-400">
+                <ShieldAlert className="w-4 h-4" />
+                <span>Recipe 3: Sensor Disconnect Alert & Graceful Degradation with `bio_artifact`</span>
               </div>
               <p className="text-xs text-foreground/90 leading-relaxed">
-                Bind live biometric text and display a warning banner if the sensor falls off:
+                Design a graceful error state that notifies the user when sensor contact is lost without misinterpreting the disconnection as emotional stress:
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-mono">
-                <div className="bg-card/60 p-2.5 rounded border border-border/50">
-                  <strong className="text-foreground block mb-1">Live BPM Text:</strong>
-                  Create a text layer (e.g. &quot;72&quot;) and bind its content to <strong className="text-red-400">bio_bpm</strong>. It updates 10 times per second!
-                </div>
-                <div className="bg-card/60 p-2.5 rounded border border-border/50">
-                  <strong className="text-foreground block mb-1">Artifact Alert:</strong>
-                  Create a &quot;Headset Detached&quot; alert banner. Bind its <strong>Layer Visibility</strong> (Eye icon) to the Boolean variable <strong className="text-amber-400">bio_artifact</strong>.
-                </div>
+              <ol className="list-decimal list-inside space-y-1 text-xs font-mono text-muted-foreground bg-card/60 p-3 rounded border border-border/50">
+                <li>Design an Alert Toast or Top Banner: <strong className="text-foreground">&quot;Sensor Contact Lost — Adjust Headband&quot;</strong>.</li>
+                <li>In Figma&apos;s right design panel under <strong>Layer</strong>, bind the visibility (eye icon) to the Boolean variable <strong className="text-primary">bio_artifact</strong>. The banner only appears when an artifact occurs.</li>
+                <li>Bind the opacity of your main visualization: when <strong className="text-primary">bio_artifact</strong> is true, reduce opacity to 40% so the user knows biofeedback is temporarily paused.</li>
+                <li>Run the pre-bundled scenario playlist <strong className="text-foreground">&quot;UX Testing: Stress Trigger & Sensor Dropout&quot;</strong> in SimData to verify the alert banner and recovery behavior.</li>
+              </ol>
+            </Card>
+
+            {/* Recipe 4: Dynamic Stress Interventions */}
+            <Card className="bg-secondary/25 border-red-500/30 p-3.5 space-y-2.5">
+              <div className="flex items-center gap-2 font-bold text-sm text-red-400">
+                <Heart className="w-4 h-4" />
+                <span>Recipe 4: Responding to Acute Stress Triggers with `bio_phasic` & `bio_bpm`</span>
               </div>
+              <p className="text-xs text-foreground/90 leading-relaxed">
+                Build an adaptive UI intervention that responds immediately to an acute user startle or cognitive error:
+              </p>
+              <ol className="list-decimal list-inside space-y-1 text-xs font-mono text-muted-foreground bg-card/60 p-3 rounded border border-border/50">
+                <li>Design a supportive calm-down modal or helpful guidance prompt.</li>
+                <li>Bind its display property or variant to <strong className="text-primary">bio_state</strong> when equal to <strong className="text-foreground">&quot;Acute Stress Trigger&quot;</strong>.</li>
+                <li>Optionally bind a numeric text field to <strong className="text-red-400">bio_bpm</strong> to show heart rate acceleration in real time.</li>
+                <li>Select and play <strong className="text-foreground">acute_stress_trigger.json</strong> in the Dataset tab to test your prototype&apos;s reaction and calm-down recovery.</li>
+              </ol>
             </Card>
           </TabsContent>
         </Tabs>
@@ -399,14 +509,14 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
   );
 };
 
-// Clear biometric glossary data without metaphors or dense medical jargon
+// Biometric glossary data without metaphors or dense medical jargon
 const GLOSSARY_ITEMS = [
   {
     term: 'EDA & GSR (Electrodermal Activity / Galvanic Skin Response)',
     icon: '⚡',
     tag: 'Skin & Arousal',
     figmaVar: null,
-    simpleExplanation: 'EDA and GSR are two names for the same physiological measurement: the electrical conductance of your skin. When you experience stress, emotional arousal, or mental effort, your involuntary nervous system activates microscopic sweat glands on your palms and fingers. Because sweat contains salt and water, skin conducts electricity more easily as moisture rises. It is one of the most reliable and direct markers of emotional arousal because it cannot be consciously controlled or faked.',
+    simpleExplanation: 'EDA and GSR are two terms for the same physiological measurement: the electrical conductance of the skin. When emotional arousal, cognitive workload, or stress increases, the sympathetic nervous system activates microscopic sweat glands on the palms and fingers. Because sweat contains water and dissolved electrolytes, the skin conducts electricity more easily as moisture increases. It provides a direct measure of emotional arousal that cannot be consciously faked.',
     lowMeaning: '1 – 3 µS (Deep physical relaxation, calm resting state, or drowsiness; dry skin).',
     highMeaning: '8 – 20+ µS (High emotional arousal, acute stress, excitement, or cognitive overload).'
   },
@@ -415,7 +525,7 @@ const GLOSSARY_ITEMS = [
     icon: '💧',
     tag: 'Skin & Arousal',
     figmaVar: null,
-    simpleExplanation: 'The slow-moving baseline level of skin conductance. It rises or falls gradually over minutes or hours, reflecting your background state of alertness, sustained workload, ambient room temperature, or chronic tension.',
+    simpleExplanation: 'The gradual, baseline level of skin conductance. It changes slowly over minutes or hours, reflecting continuous alertness, background workload, ambient room temperature, or chronic tension.',
     lowMeaning: '2 – 4 µS (Resting baseline, passive relaxation, or low vigilance).',
     highMeaning: '8 – 15+ µS (Sustained mental strain, prolonged stress, or high vigilance).'
   },
@@ -424,26 +534,26 @@ const GLOSSARY_ITEMS = [
     icon: '📈',
     tag: 'Skin & Arousal',
     figmaVar: null,
-    simpleExplanation: 'Fast, temporary peaks in skin conductance that appear 1 to 3 seconds after an immediate event—such as an unexpected alert, an interface error, a difficult question, or a sudden sound. These responses fade away over 5 to 10 seconds.',
-    lowMeaning: '0.0 µS (No sudden reactions; steady, calm state without startle).',
-    highMeaning: '0.5 – 2.0+ µS (Immediate emotional reaction, startle, or acute frustration).'
+    simpleExplanation: 'Fast, momentary peaks in skin conductance that appear 1 to 3 seconds after a specific stimulus, such as an error alert, an unexpected sound, or a difficult task. These responses typically return toward baseline over 5 to 10 seconds.',
+    lowMeaning: '0.0 µS (No sudden reactions; stable, calm state without startle).',
+    highMeaning: '0.5 – 3.0+ µS (Immediate emotional reaction, startle, or acute frustration).'
   },
   {
     term: 'Heart Rate (BPM)',
     icon: '💓',
     tag: 'Heart & Rhythm',
     figmaVar: 'bio_bpm',
-    simpleExplanation: 'The number of times your heart contracts and pumps blood per minute (Beats Per Minute). Heart rate speeds up during physical movement, stress, or excitement, and slows down during rest, calm breathing, and recovery.',
+    simpleExplanation: 'The number of times the heart beats per minute. Heart rate increases during physical activity, cognitive stress, or emotional startle, and decreases during rest, calm breathing, and physical recovery.',
     lowMeaning: '50 – 65 BPM (Deep rest, calm meditation, or athletic resting pulse).',
-    highMeaning: '90 – 130+ BPM (Physical exertion, panic, sudden shock, or mental strain).'
+    highMeaning: '90 – 130+ BPM (Physical exertion, sudden startle, panic, or mental strain).'
   },
   {
     term: 'Heart Rate Variability (RMSSD)',
     icon: '📊',
     tag: 'Heart & Rhythm',
     figmaVar: 'bio_coherence',
-    simpleExplanation: 'The millisecond variation in time between consecutive heartbeats (calculated as the Root Mean Square of Successive Differences). A healthy heart naturally speeds up slightly during inhalation and slows down during exhalation. Higher variability indicates a flexible, resilient nervous system capable of recovering quickly from stress.',
-    lowMeaning: 'Below 25 ms (Physical exhaustion, chronic stress, or nervous system fatigue).',
+    simpleExplanation: 'The variation in time intervals between consecutive heartbeats, measured in milliseconds. A healthy autonomic nervous system adjusts the time between beats continuously. Higher variability indicates autonomic flexibility and strong stress recovery capacity.',
+    lowMeaning: 'Below 25 ms (Physical exhaustion, chronic stress, or autonomic fatigue).',
     highMeaning: 'Above 55 ms (High vitality, calm nervous system, and strong recovery capacity).'
   },
   {
@@ -451,8 +561,8 @@ const GLOSSARY_ITEMS = [
     icon: '✨',
     tag: 'Heart & Breath',
     figmaVar: 'bio_coherence',
-    simpleExplanation: 'A calculated score from 0.0 to 1.0 showing how synchronized your heart rate rhythm is with your breathing cycle. When breathing at a relaxed, steady rate of about 6 breaths per minute, heart rate oscillations lock in unison with respiration, maximizing coherence.',
-    lowMeaning: '0.1 – 0.3 (Irregular, shallow, or anxious breathing disconnected from pulse).',
+    simpleExplanation: 'A calculated index from 0.0 to 1.0 indicating how closely the heart rate oscillations synchronize with the breathing cycle. When breathing at a steady rate of approximately 6 breaths per minute, heart rate oscillations synchronize with inhalation and exhalation, maximizing coherence.',
+    lowMeaning: '0.1 – 0.3 (Irregular or rapid breathing desynchronized from heart rate).',
     highMeaning: '0.8 – 1.0 (Harmonic synchronization between breathing and pulse; deep calm).'
   },
   {
@@ -469,8 +579,8 @@ const GLOSSARY_ITEMS = [
     icon: '🧘',
     tag: 'Brainwaves',
     figmaVar: 'bio_alpha',
-    simpleExplanation: 'Electrical brain activity associated with calm, effortless alertness. Alpha waves increase when you are relaxed, mindful, or in a creative flow state without mental strain, especially with eyes relaxed.',
-    lowMeaning: 'Below 0.25 (Mental tension, active problem-solving, or sensory overload).',
+    simpleExplanation: 'Electrical brain rhythms associated with relaxed, effortless alertness. Alpha waves increase during calm mindfulness, resting wakefulness with eyes relaxed, or effortless creative concentration.',
+    lowMeaning: 'Below 0.25 (Active analytical strain, problem-solving, or sensory overload).',
     highMeaning: 'Above 0.70 (Calm mindfulness, relaxed concentration, or mental ease).'
   },
   {
@@ -478,17 +588,17 @@ const GLOSSARY_ITEMS = [
     icon: '🧠',
     tag: 'Brainwaves',
     figmaVar: 'bio_beta',
-    simpleExplanation: 'Fast brain rhythms produced during active analytical thinking, problem-solving, decision-making, and high cognitive workload.',
+    simpleExplanation: 'Fast brain rhythms produced during active analytical thinking, focused problem-solving, decision-making, and high mental effort.',
     lowMeaning: 'Below 0.20 (Relaxed awareness, meditation, or daydreaming).',
-    highMeaning: 'Above 0.75 (Intense concentration, multitasking strain, or anxiety).'
+    highMeaning: 'Above 0.75 (Intense analytical concentration, cognitive strain, or anxiety).'
   },
   {
     term: 'Theta Brainwaves (4 – 8 Hz)',
     icon: '🌙',
     tag: 'Brainwaves',
     figmaVar: null,
-    simpleExplanation: 'Slow brain rhythms that occur during deep daydreaming, creative visualization, and the drowsy transition right before falling asleep (hypnagogia).',
-    lowMeaning: 'Below 0.20 (Fully awake and alert).',
+    simpleExplanation: 'Slow brain rhythms that occur during deep daydreaming, creative visualization, and the drowsy transition preceding sleep (hypnagogia).',
+    lowMeaning: 'Below 0.20 (Fully alert and awake).',
     highMeaning: 'Above 0.65 (Drowsiness, twilight sleep transition, or deep reverie).'
   },
   {
@@ -496,35 +606,71 @@ const GLOSSARY_ITEMS = [
     icon: '💤',
     tag: 'Brainwaves',
     figmaVar: null,
-    simpleExplanation: 'The slowest brain oscillations, dominant during deep, dreamless restorative sleep. In healthy awake individuals, delta levels remain low.',
+    simpleExplanation: 'The slowest brain oscillations, dominant during deep, dreamless restorative sleep. In healthy waking individuals, delta levels remain low.',
     lowMeaning: 'Below 0.20 (Normal waking state).',
-    highMeaning: 'Above 0.60 (Profound sleep or deep physical recovery).'
+    highMeaning: 'Above 0.60 (Deep restorative sleep or extreme drowsiness).'
   },
   {
     term: 'SMR Rhythm (12 – 15 Hz)',
     icon: '🐈',
     tag: 'Brainwaves',
     figmaVar: null,
-    simpleExplanation: 'Sensorimotor Rhythm recorded over the motor cortex. It reflects physical stillness combined with attentive mental readiness—the ability to remain calm and focused without physical fidgeting.',
-    lowMeaning: 'Physical restlessness, fidgeting, or distraction.',
-    highMeaning: 'Calm physical stillness with focused attention.'
+    simpleExplanation: 'Sensorimotor Rhythm recorded over the motor cortex. It reflects physical stillness paired with focused mental attention—the capacity to remain calm and attentive without physical restlessness.',
+    lowMeaning: 'Below 0.25 (Physical restlessness, fidgeting, or distraction).',
+    highMeaning: 'Above 0.60 (Calm physical stillness with steady mental attention).'
   },
   {
     term: 'Cognitive State Name',
     icon: '🏷️',
     tag: 'Affective State',
     figmaVar: 'bio_state',
-    simpleExplanation: 'A real-time label identifying the user\'s current physiological state (for example, "Baseline / Neutral", "Deep Meditation / Flow", or "Cognitive Stress"). In Figma prototypes, binding this string variable allows interfaces to automatically adapt components and screens.',
+    simpleExplanation: 'A text label representing the current physiological state (for example, "Baseline / Neutral", "Deep Meditation / Flow", "Cognitive Stress", or "Acute Stress Trigger"). In Figma prototypes, binding this string variable allows components and layouts to switch automatically.',
     lowMeaning: 'Used in design prototypes to switch UI modes.',
     highMeaning: 'Enables contextual, adaptive user experience testing.'
   },
   {
-    term: 'Sensor Artifacts (Blink / Clench / Detach)',
+    term: 'Sensor Artifacts (Overview)',
     icon: '⚠️',
     tag: 'Noise Simulation',
     figmaVar: 'bio_artifact',
-    simpleExplanation: 'Real physiological sensors detect electrical noise from eye blinks, jaw clenching, and loose electrodes. SimData simulates these realistic distortions so designers can build and test error states, such as "Sensor Reconnection" notifications.',
-    lowMeaning: 'Clean, noise-free biometric signal.',
-    highMeaning: 'Artifact detected; use to trigger warning banners or pause recording.'
+    simpleExplanation: 'In biosignal recording, an "artifact" is electrical or physical interference that enters the recording from outside the physiological process being measured. Body movement, facial muscle tension, eye movements, and loose sensors all create electrical signals that can corrupt biosignals. SimData flags these disruptions with bio_artifact = true so prototypes can handle error states gracefully.',
+    lowMeaning: 'Clean, reliable biometric signal without interference.',
+    highMeaning: 'Artifact detected; trigger error states or pause active feedback.'
+  },
+  {
+    term: 'Eye Blink & Saccade Artifacts (EOG)',
+    icon: '👁️',
+    tag: 'Noise Simulation',
+    figmaVar: 'bio_artifact',
+    simpleExplanation: 'The human eyeball functions as an electrical dipole with a positive cornea in front and a negative retina in back. When eyelids slide over the cornea during a blink, or when eyes dart rapidly (saccades), an electrical spike of 50 to 100+ microvolts passes across forehead EEG electrodes. This transient 200 to 400 millisecond spike can mask true frontal brain activity.',
+    lowMeaning: 'Eyes relaxed, steady gaze; clean frontal EEG recordings.',
+    highMeaning: 'Rapid blinking or eye movements causing large wave deflections.'
+  },
+  {
+    term: 'Muscle Tension & Jaw Clench Artifacts (EMG)',
+    icon: '⚡',
+    tag: 'Noise Simulation',
+    figmaVar: 'bio_artifact',
+    simpleExplanation: 'When facial, jaw, neck, or scalp muscles contract—such as when clenching teeth, chewing, or frowning—contracting muscle fibers produce intense electrical bursts (Electromyography). Because muscle signals can be 100 times larger in amplitude than microvolt brainwaves, jaw clenches generate high-frequency noise (20 to 100+ Hz) that can easily be mistaken for extreme beta or gamma brainwaves.',
+    lowMeaning: 'Relaxed facial and jaw muscles; genuine neural readings.',
+    highMeaning: 'Clenched jaw or facial tension causing high-frequency noise.'
+  },
+  {
+    term: 'Electrode Detachment & Contact Loss',
+    icon: '🔌',
+    tag: 'Hardware Status',
+    figmaVar: 'bio_artifact',
+    simpleExplanation: 'Occurs when a dry EEG electrode lifts away from the scalp, an adhesive ECG patch peels from the skin, or a wrist pulse sensor shifts. When electrical contact is lost, sensor impedance jumps to maximum. This produces flatlined signals, zero BPM readings, or 50/60 Hz electrical grid noise from nearby wall wiring.',
+    lowMeaning: 'Snug sensor fit with proper electrical impedance.',
+    highMeaning: 'Sensor loose or disconnected; flatline or invalid reading.'
+  },
+  {
+    term: 'Acute Stress Trigger (Startle Response)',
+    icon: '💥',
+    tag: 'Affective State',
+    figmaVar: 'bio_state',
+    simpleExplanation: 'An immediate full-body stress response provoked by an unexpected alarm, countdown buzzer, critical error dialog, or sudden failure. Within 1 to 3 seconds, sympathetic activation causes an immediate Phasic EDA sweat surge (1.5 to 3.0+ µS) and heart rate acceleration (+15 to 25 BPM), while Alpha brainwaves drop. Unlike a physical artifact, this is a genuine biological reaction across multiple sensors.',
+    lowMeaning: 'Predictable, uninterrupted workflow; steady recovery.',
+    highMeaning: 'Sudden task error or startle event producing an immediate multi-signal surge.'
   }
 ];
