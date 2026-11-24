@@ -23,6 +23,7 @@ import { DatasetTab } from './components/DatasetTab';
 import { ArtifactsBar } from './components/ArtifactsBar';
 import { FigmaModal } from './components/FigmaModal';
 import { PayloadModal } from './components/PayloadModal';
+import { HelpModal } from './components/HelpModal';
 import { Card } from './components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './components/ui/tabs';
 import { Sparkles, Sliders, HardDrive } from 'lucide-react';
@@ -121,6 +122,7 @@ export const App: React.FC = () => {
   // Modals
   const [figmaModalOpen, setFigmaModalOpen] = useState<boolean>(false);
   const [payloadModalOpen, setPayloadModalOpen] = useState<boolean>(false);
+  const [helpModalOpen, setHelpModalOpen] = useState<boolean>(false);
 
   const sendControlMessage = (msg: any) => {
     if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
@@ -710,6 +712,7 @@ export const App: React.FC = () => {
         onExportCsv={handleExportCsv}
         onOpenFigmaModal={() => setFigmaModalOpen(true)}
         onOpenPayloadModal={() => setPayloadModalOpen(true)}
+        onOpenHelpModal={() => setHelpModalOpen(true)}
       />
 
       {/* Main Workspace Body - Scrollable Container */}
@@ -807,6 +810,10 @@ export const App: React.FC = () => {
         isOpen={payloadModalOpen}
         onClose={() => setPayloadModalOpen(false)}
         telemetry={telemetry}
+      />
+      <HelpModal
+        isOpen={helpModalOpen}
+        onClose={() => setHelpModalOpen(false)}
       />
     </div>
   );

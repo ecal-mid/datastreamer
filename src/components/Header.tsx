@@ -9,7 +9,8 @@ import {
   VolumeX,
   Download,
   Play,
-  Pause
+  Pause,
+  HelpCircle
 } from 'lucide-react';
 import { OperatingMode } from '../engine/types';
 import { Button } from './ui/button';
@@ -32,6 +33,7 @@ interface HeaderProps {
   onExportCsv?: () => void;
   onOpenFigmaModal: () => void;
   onOpenPayloadModal: () => void;
+  onOpenHelpModal?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -51,6 +53,7 @@ export const Header: React.FC<HeaderProps> = ({
   onExportCsv,
   onOpenFigmaModal,
   onOpenPayloadModal,
+  onOpenHelpModal,
 }) => {
   return (
     <header className="h-14 border-b border-border bg-card/80 backdrop-blur-sm px-4 flex items-center justify-between select-none sticky top-0 z-40 gap-2 shrink-0">
@@ -181,6 +184,19 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Download className="w-3.5 h-3.5 text-muted-foreground" />
             <span className="hidden md:inline">CSV</span>
+          </Button>
+        )}
+
+        {onOpenHelpModal && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onOpenHelpModal}
+            className="gap-1.5 font-mono text-xs text-primary border-primary/40 hover:bg-primary/10"
+            title="Biometrics & Design Reference Guide"
+          >
+            <HelpCircle className="w-3.5 h-3.5 text-primary" />
+            <span className="hidden sm:inline">Guide</span>
           </Button>
         )}
 
