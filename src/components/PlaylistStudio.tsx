@@ -625,16 +625,18 @@ export const PlaylistStudio: React.FC<PlaylistStudioProps> = ({
                       value={step.name || ''}
                       onChange={(e) => handleUpdateStep(idx, { name: e.target.value })}
                       placeholder={`Stage ${idx + 1}`}
-                      className="bg-transparent border-b border-border/60 focus:border-primary px-1 py-0.5 text-xs font-semibold text-foreground focus:outline-none min-w-[120px] max-w-[200px]"
+                      className="bg-transparent border-b border-border/60 focus:border-primary px-1.5 py-0.5 text-xs font-semibold text-foreground focus:outline-none flex-1 min-w-[160px] mr-2 transition-all"
+                      title={step.name || `Stage ${idx + 1}`}
                     />
                   </div>
 
                   {/* Middle: Recording File Selector */}
-                  <div className="flex items-center gap-1.5 min-w-0">
+                  <div className="flex items-center gap-1.5 min-w-0 shrink-0">
                     <select
                       value={step.recordingFile}
                       onChange={(e) => handleUpdateStep(idx, { recordingFile: e.target.value })}
-                      className="bg-secondary/70 border border-border rounded px-2 py-1 text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary max-w-[220px] truncate"
+                      className="bg-secondary/70 border border-border rounded px-2 py-1 text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary max-w-[260px] truncate"
+                      title={step.recordingFile}
                     >
                       {availableDatasets.map((f) => (
                         <option key={f} value={f}>
