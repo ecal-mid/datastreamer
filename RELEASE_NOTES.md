@@ -1,3 +1,90 @@
+# SimData v1.2.0 Release Notes
+
+**Release Date:** November 24, 2026  
+**Build:** `v1.2.0` (macOS Apple Silicon & Universal Web)  
+**Binary Downloads:** [SimData-1.2.0-arm64.dmg](file:///Users/abookm1/Documents/GitHub/datastreamer/release/SimData-1.2.0-arm64.dmg) • [SimData-1.2.0-arm64-mac.zip](file:///Users/abookm1/Documents/GitHub/datastreamer/release/SimData-1.2.0-arm64-mac.zip) • [simdata-figma-plugin.zip](file:///Users/abookm1/Documents/GitHub/datastreamer/figma-plugin/simdata-figma-plugin.zip)
+
+---
+
+## 🌟 Highlights
+
+SimData **v1.2.0** introduces **Scenario Playlists & Biometric Sequencing Engine**, allowing interaction designers, researchers, and creative technologists to chain multiple biometric recordings into multi-stage state transitions (e.g., *Baseline 30s → Stress 45s → Recovery 60s*). With smooth physiological cubic crossfades, a dedicated visual Scenario Studio, portable `.playlist.json` export/import, and native persistence in macOS Application Support, prototyping adaptive, state-dependent interfaces in Figma, TouchDesigner, or Max/MSP has never been easier.
+
+---
+
+## 🚀 What's New
+
+### 1. Scenario Playlists & Sequencing Engine
+- **Multi-Stage Biometric Journeys:** Chain any sequence of recordings (factory presets, Muse, WESAD, or custom CSV/JSON sessions) into an automated timeline.
+- **Configurable Stage Duration:** Override recording playback durations per stage (e.g., play only the first 15s or 45s of a 5-minute dataset) non-destructively.
+- **Physiological Cubic Crossfading:** Seamlessly blend between disparate recordings using 3-second cubic smoothstep interpolation (`t * t * (3 - 2 * t)`), eliminating sudden metric cliffs across respiration, ECG vectors, and EEG band powers. Instant cut transitions are also supported.
+- **Server-Side 30 Hz Execution:** Like single playback, scenarios tick directly inside the Node.js background engine (`server/bioServer.cjs`), ensuring complete immunity against Chromium background tab throttling when working actively inside Figma.
+
+### 2. Scenario Studio & UI
+- **Dual-Mode Dataset Interface:** Toggle effortlessly between **`📄 Single Recordings`** and **`🔀 Scenario Playlists`** via a high-contrast segmented control.
+- **Visual Scenario Editor:**
+  - Create, rename, duplicate, and delete custom scenarios.
+  - Interactive stage cards with source recording dropdowns, stage labels, transition toggles, and duration steppers.
+  - Reorder stages with instant Move Up / Move Down buttons.
+- **Live Scenario HUD & Transport:**
+  - **Dual Progress Bars:** Real-time visual feedback tracking both **Current Stage Progress** and **Overall Journey Progress**.
+  - **Stage Stepper Controls:** Quick **`⏮ Prev Stage`** and **`⏭ Next Stage`** buttons to jump directly between states during live design reviews.
+  - **Status Pill:** Displays active stage index, stage title, and remaining time countdown (`Stage 2 / 3: Cognitive Strain (24s remaining)`).
+
+### 3. Portable Scenario Persistence & Sharing
+- **Factory Scenarios Included:**
+  - `stress_recovery_protocol.json`: 3-stage protocol (30s Baseline → 45s Stress Overload → 60s Deep Recovery).
+  - `focus_to_fatigue.json`: 3-stage study (45s High Flow → 45s Cognitive Strain → 45s Drowsiness).
+  - `adaptive_rapid_test.json`: 15s rapid-cycle scenario designed for iterative Figma prototype stress-testing.
+- **1-Click Export & Import:** Save portable `.playlist.json` files to share with teammates, students, or project repositories.
+- **Native macOS Persistence:** Custom playlists persist in `~/Library/Application Support/simdata/playlists/`, with an **Open Folder** button to reveal them in Finder.
+
+### 4. Compact EEG Spectral Band Power Card
+- Optimized vertical padding, font scales, and progress bars to provide maximum oscilloscope canvas visibility without sacrificing biometric telemetry readability.
+
+---
+
+## 🧪 Verification & Testing
+
+SimData v1.2.0 expands the automated test suite (`npm test`) to **15 comprehensive tests**:
+1. Telemetry Schema & Range Conformance (30 Hz)
+2. Respiratory Sinus Arrhythmia (RSA) Physiological Coupling
+3. 3-Second Non-Linear Preset Transition & Interpolation
+4. Motion Artifact Injection & Recovery (Blink, Clench, Detach)
+5. OSC UDP 4-Byte Binary Alignment (10 Addresses)
+6. Pre-bundled Dataset Recording Assets Integrity
+7. Figma Plugin Manifest & Typings Compilation
+8. Main Streamer Play/Pause Transport State Freeze
+9. Simulation Speed Multipliers (1x, 2x, 4x)
+10. 17-Column Template & REST Upload Persistence
+11. Muse / Mind Monitor CSV Auto-Detection & Conversion
+12. WESAD / Empatica E4 CSV Auto-Detection & Conversion
+13. Server-Side Dataset Stepping, Pause Freeze & Variable Speed
+14. Scenario Playlist Sequencing & Crossfade Transitions
+15. Live WebSocket Telemetry Streaming in Playback Mode
+
+---
+
+## 📦 Distribution Packages
+
+| File | Size | Description |
+| :--- | :--- | :--- |
+| **[SimData-1.2.0-arm64.dmg](file:///Users/abookm1/Documents/GitHub/datastreamer/release/SimData-1.2.0-arm64.dmg)** | ~99 MB | Apple Silicon macOS Installer (Drag-and-Drop) |
+| **[SimData-1.2.0-arm64-mac.zip](file:///Users/abookm1/Documents/GitHub/datastreamer/release/SimData-1.2.0-arm64-mac.zip)** | ~95 MB | Portable Apple Silicon macOS Application Bundle |
+| **[simdata-figma-plugin.zip](file:///Users/abookm1/Documents/GitHub/datastreamer/figma-plugin/simdata-figma-plugin.zip)** | ~6 KB | Companion Figma Plugin Bundle (Manifest + UI + Code) |
+
+---
+
+### ⚠️ macOS Gatekeeper Note ("App is damaged and can't be opened")
+Because SimData is an open-source tool built without an Apple Developer ID paid certificate ($99/yr), macOS attaches a `com.apple.quarantine` extended attribute when downloaded from GitHub Releases.
+To open the app, run this single command in **Terminal**:
+```bash
+xattr -cr /Applications/SimData.app
+```
+*(Or navigate to **System Settings > Privacy & Security**, scroll down to the Security section, and click **"Open Anyway"**).*
+
+---
+
 # SimData v1.1.0 Release Notes
 
 **Release Date:** November 17, 2026  

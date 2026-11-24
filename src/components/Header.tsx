@@ -60,7 +60,7 @@ export const Header: React.FC<HeaderProps> = ({
           <span className="text-primary font-mono text-base">⚡</span>
           <span className="bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent font-extrabold tracking-tight">SimData</span>
           <Badge variant="outline" className="font-mono text-[10px] px-1.5 py-0 border-border/80 text-muted-foreground font-normal">
-            v1.1.0
+            v1.2.0
           </Badge>
         </div>
 

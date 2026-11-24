@@ -33,6 +33,33 @@ function getRecordingsDir() {
   return recordingsDir;
 }
 
+function getPlaylistsDir() {
+  const userDataDir = app.getPath('userData');
+  const playlistsDir = path.join(userDataDir, 'playlists');
+  if (!fs.existsSync(playlistsDir)) {
+    fs.mkdirSync(playlistsDir, { recursive: true });
+  }
+
+  // Seed default bundled playlists to user's writable playlists directory
+  const bundledDir = path.join(__dirname, '..', 'assets', 'playlists');
+  if (fs.existsSync(bundledDir)) {
+    try {
+      const defaultFiles = fs.readdirSync(bundledDir).filter(f => f.endsWith('.json'));
+      for (const f of defaultFiles) {
+        const src = path.join(bundledDir, f);
+        const dst = path.join(playlistsDir, f);
+        if (!fs.existsSync(dst)) {
+          fs.copyFileSync(src, dst);
+        }
+      }
+    } catch (e) {
+      console.warn('[SimData] Could not seed default playlists to userData:', e);
+    }
+  }
+
+  return playlistsDir;
+}
+
 // Handle opening recordings folder in native file manager
 ipcMain.handle('open-recordings-folder', async () => {
   const recDir = getRecordingsDir();
@@ -40,14 +67,22 @@ ipcMain.handle('open-recordings-folder', async () => {
   return true;
 });
 
+// Handle opening playlists folder in native file manager
+ipcMain.handle('open-playlists-folder', async () => {
+  const plDir = getPlaylistsDir();
+  await shell.openPath(plDir);
+  return true;
+});
+
 function createWindow() {
   const wsPort = Number(process.env.PORT || process.env.WS_PORT) || 8081;
   const oscPort = Number(process.env.OSC_PORT) || 9000;
   const recordingsDir = getRecordingsDir();
+  const playlistsDir = getPlaylistsDir();
 
   // Start the background BioEngine WebSocket & OSC UDP server
   try {
-    bioBridge = startSimDataServer({ wsPort, oscPort, recordingsDir });
+    bioBridge = startSimDataServer({ wsPort, oscPort, recordingsDir, playlistsDir });
   } catch (err) {
     console.error('[SimData] Failed to start internal bridge server:', err);
   }

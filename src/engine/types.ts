@@ -1,4 +1,4 @@
-export type OperatingMode = 'generative' | 'preset' | 'playback';
+export type OperatingMode = 'generative' | 'preset' | 'playback' | 'playlist';
 
 export interface EegBands {
   delta: number;   // 0.5 - 4 Hz
@@ -41,6 +41,7 @@ export interface SimDataTelemetry {
     eda: EdaData;
   };
   states: StatesData;
+  playlist_state?: PlaylistPlaybackState;
 }
 
 // Backwards compatibility alias
@@ -110,4 +111,39 @@ export interface DatasetPlaybackState {
   totalFrames: number;
   datasetName: string;
   durationSeconds: number;
+}
+
+export type TransitionType = 'smooth' | 'cut';
+
+export interface PlaylistStep {
+  id: string;
+  name?: string;
+  recordingFile: string;
+  durationSeconds: number; // e.g. 15, 30, 45, 60, 90, 120
+}
+
+export interface PlaylistScenario {
+  id: string;
+  name: string;
+  description?: string;
+  loop: boolean;
+  transitionType: TransitionType;
+  transitionDuration: number; // in seconds (e.g. 2.0, 3.0)
+  steps: PlaylistStep[];
+}
+
+export interface PlaylistPlaybackState {
+  isActive: boolean;
+  playlistId: string;
+  playlistName: string;
+  currentStepIndex: number;
+  totalSteps: number;
+  currentStepName: string;
+  recordingFile: string;
+  stepElapsedSeconds: number;
+  stepDurationSeconds: number;
+  playlistElapsedSeconds: number;
+  totalPlaylistSeconds: number;
+  isTransitioning: boolean;
+  transitionProgress: number; // 0.0 to 1.0
 }

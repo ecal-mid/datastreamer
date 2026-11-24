@@ -314,8 +314,54 @@ playbackEngine.tick(1 / 30);
 assert.strictEqual(playbackEngine.datasetIndex, 3, 'Index should advance by 2 frames at 2x speed');
 console.log('✓ Test 13 Passed: Server-side dataset playback engine verified.\n');
 
-// Test 14: WebSocket Dataset Streaming to Clients (Figma Bridge Simulation)
-console.log('Test 14: WebSocket Live Telemetry Streaming in Playback Mode');
+// Test 14: SimulationEngine Scenario Playlist Sequencing & Crossfade Transitions
+console.log('Test 14: Scenario Playlist Sequencing & Crossfade Transitions');
+const plEngine = new SimulationEngine();
+const testPlaylist = {
+  id: 'test_scenario',
+  name: 'Test Scenario',
+  loop: true,
+  transitionType: 'smooth',
+  transitionDuration: 0.5,
+  steps: [
+    { id: 's1', name: 'Step 1', recordingFile: 'meditation_deep_flow.json', durationSeconds: 1.0 },
+    { id: 's2', name: 'Step 2', recordingFile: 'cognitive_stress_overload.json', durationSeconds: 1.0 },
+  ]
+};
+
+const resolveRecording = (filename) => {
+  return fs.readFileSync(path.join(__dirname, '..', 'assets', 'recordings', filename), 'utf8');
+};
+
+plEngine.setPlaylist(testPlaylist, resolveRecording);
+assert.strictEqual(plEngine.mode, 'playlist', 'Mode must be playlist');
+assert.strictEqual(plEngine.playlistStepIndex, 0, 'Initial step index must be 0');
+
+const plFrame1 = plEngine.tick(1 / 30);
+assert(plFrame1.playlist_state, 'playlist_state must be attached to telemetry');
+assert.strictEqual(plFrame1.playlist_state.currentStepIndex, 0, 'Current step index must be 0');
+assert.strictEqual(plFrame1.playlist_state.totalSteps, 2, 'Total steps must be 2');
+
+// Advance through step 1 (30 ticks = 1 second)
+for (let i = 0; i < 30; i++) {
+  plEngine.tick(1 / 30);
+}
+
+// Next tick should enter transition to step 2
+const transitionFrame = plEngine.tick(1 / 30);
+assert.strictEqual(plEngine.playlistStepIndex, 1, 'Should advance to step 2 after duration');
+assert(transitionFrame.playlist_state.isTransitioning, 'Should be in crossfade transition state');
+console.log(`  Playlist step transition verified: advanced to Step 2, crossfade progress: ${transitionFrame.playlist_state.transitionProgress}`);
+
+// Test manual step skip
+plEngine.nextPlaylistStep(resolveRecording);
+assert.strictEqual(plEngine.playlistStepIndex, 0, 'Looping next step should return to Step 1');
+plEngine.prevPlaylistStep(resolveRecording);
+assert.strictEqual(plEngine.playlistStepIndex, 1, 'Prev step should wrap to Step 2');
+console.log('✓ Test 14 Passed: Scenario playlist sequencing & crossfade verified.\n');
+
+// Test 15: WebSocket Dataset Streaming to Clients (Figma Bridge Simulation)
+console.log('Test 15: WebSocket Live Telemetry Streaming in Playback Mode');
 const { startSimDataServer } = require('../server/bioServer.cjs');
 const { WebSocket } = require('ws');
 

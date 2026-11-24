@@ -1,0 +1,28 @@
+{
+  "id": "focus_to_fatigue",
+  "name": "Focus to Fatigue",
+  "description": "Deep alpha focus state transitioning into high beta cognitive strain, decaying into theta hypnagogic drowsiness.",
+  "loop": true,
+  "transitionType": "smooth",
+  "transitionDuration": 3.0,
+  "steps": [
+    {
+      "id": "step_1",
+      "name": "Alpha Flow State",
+      "recordingFile": "meditation_deep_flow.json",
+      "durationSeconds": 45
+    },
+    {
+      "id": "step_2",
+      "name": "Beta Alertness & Strain",
+      "recordingFile": "cognitive_stress_overload.json",
+      "durationSeconds": 45
+    },
+    {
+      "id": "step_3",
+      "name": "Drowsiness & Hypnagogia",
+      "recordingFile": "drowsiness_hypnagogia.csv",
+      "durationSeconds": 45
+    }
+  ]
+}

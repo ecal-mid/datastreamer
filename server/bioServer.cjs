@@ -173,6 +173,16 @@ class SimulationEngine {
     this.datasetIndex = 0;
     this.datasetAccumulator = 0;
     this.datasetName = '';
+
+    // Playlist / Scenario State
+    this.playlist = null;
+    this.playlistStepIndex = 0;
+    this.playlistStepElapsed = 0;
+    this.playlistTotalElapsed = 0;
+    this.isTransitioning = false;
+    this.transitionElapsed = 0;
+    this.transitionFromFrame = null;
+    this.recordingsResolver = null;
   }
 
   setMode(mode) {
@@ -274,6 +284,104 @@ class SimulationEngine {
     return frames;
   }
 
+  blendFrames(frameA, frameB, t) {
+    if (!frameA) return frameB;
+    if (!frameB) return frameA;
+    const smoothT = t * t * (3 - 2 * t);
+    const lerp = (a, b) => (typeof a === 'number' && typeof b === 'number') ? a + smoothT * (b - a) : (b !== undefined ? b : a);
+
+    return {
+      timestamp: Date.now(),
+      mode: 'playlist',
+      biometrics: {
+        eeg: {
+          alpha: Number(lerp(frameA.biometrics?.eeg?.alpha, frameB.biometrics?.eeg?.alpha).toFixed(3)),
+          beta:  Number(lerp(frameA.biometrics?.eeg?.beta,  frameB.biometrics?.eeg?.beta).toFixed(3)),
+          theta: Number(lerp(frameA.biometrics?.eeg?.theta, frameB.biometrics?.eeg?.theta).toFixed(3)),
+          smr:   Number(lerp(frameA.biometrics?.eeg?.smr,   frameB.biometrics?.eeg?.smr).toFixed(3)),
+          gamma: Number(lerp(frameA.biometrics?.eeg?.gamma, frameB.biometrics?.eeg?.gamma).toFixed(3)),
+          delta: Number(lerp(frameA.biometrics?.eeg?.delta, frameB.biometrics?.eeg?.delta).toFixed(3)),
+        },
+        hrv: {
+          bpm: Number(lerp(frameA.biometrics?.hrv?.bpm, frameB.biometrics?.hrv?.bpm).toFixed(1)),
+          rmssd: Number(lerp(frameA.biometrics?.hrv?.rmssd, frameB.biometrics?.hrv?.rmssd).toFixed(1)),
+          coherence: Number(lerp(frameA.biometrics?.hrv?.coherence, frameB.biometrics?.hrv?.coherence).toFixed(3)),
+        },
+        respiration: {
+          phase: t < 0.5 ? (frameA.biometrics?.respiration?.phase || 'inhale') : (frameB.biometrics?.respiration?.phase || 'inhale'),
+          value: Number(lerp(frameA.biometrics?.respiration?.value, frameB.biometrics?.respiration?.value).toFixed(3)),
+        },
+        eda: {
+          tonic: Number(lerp(frameA.biometrics?.eda?.tonic, frameB.biometrics?.eda?.tonic).toFixed(2)),
+          phasic: Number(lerp(frameA.biometrics?.eda?.phasic, frameB.biometrics?.eda?.phasic).toFixed(3)),
+        }
+      },
+      states: {
+        calm_index: Number(lerp(frameA.states?.calm_index, frameB.states?.calm_index).toFixed(2)),
+        focus_index: Number(lerp(frameA.states?.focus_index, frameB.states?.focus_index).toFixed(2)),
+        artifact_flag: t > 0.5 ? Boolean(frameB.states?.artifact_flag) : Boolean(frameA.states?.artifact_flag),
+      }
+    };
+  }
+
+  setPlaylist(playlist, resolver = null) {
+    this.playlist = playlist;
+    this.mode = 'playlist';
+    this.playlistStepIndex = 0;
+    this.playlistStepElapsed = 0;
+    this.playlistTotalElapsed = 0;
+    this.isTransitioning = false;
+    this.transitionElapsed = 0;
+    this.transitionFromFrame = null;
+    if (resolver) this.recordingsResolver = resolver;
+    this.loadCurrentPlaylistStep();
+  }
+
+  loadCurrentPlaylistStep() {
+    if (!this.playlist || !this.playlist.steps || this.playlist.steps.length === 0) return;
+    const step = this.playlist.steps[this.playlistStepIndex];
+    if (!step) return;
+
+    if (this.recordingsResolver) {
+      const content = this.recordingsResolver(step.recordingFile);
+      if (content) {
+        this.loadDataset(step.recordingFile, content);
+      }
+    }
+  }
+
+  nextPlaylistStep(resolver = null) {
+    if (resolver) this.recordingsResolver = resolver;
+    if (!this.playlist || !this.playlist.steps || this.playlist.steps.length === 0) return;
+    const nextIdx = (this.playlistStepIndex + 1) % this.playlist.steps.length;
+    this.seekPlaylistStep(nextIdx);
+  }
+
+  prevPlaylistStep(resolver = null) {
+    if (resolver) this.recordingsResolver = resolver;
+    if (!this.playlist || !this.playlist.steps || this.playlist.steps.length === 0) return;
+    let prevIdx = this.playlistStepIndex - 1;
+    if (prevIdx < 0) prevIdx = this.playlist.steps.length - 1;
+    this.seekPlaylistStep(prevIdx);
+  }
+
+  seekPlaylistStep(index, resolver = null) {
+    if (resolver) this.recordingsResolver = resolver;
+    if (!this.playlist || !this.playlist.steps || this.playlist.steps.length === 0) return;
+    const clamped = Math.max(0, Math.min(this.playlist.steps.length - 1, index));
+    this.transitionFromFrame = this.lastFrame;
+    this.playlistStepIndex = clamped;
+    this.playlistStepElapsed = 0;
+    this.loadCurrentPlaylistStep();
+
+    if (this.playlist.transitionType === 'smooth' && (this.playlist.transitionDuration || 3.0) > 0) {
+      this.isTransitioning = true;
+      this.transitionElapsed = 0;
+    } else {
+      this.isTransitioning = false;
+    }
+  }
+
   setPlaybackFrame(frame) {
     this.mode = 'playback';
     this.lastFrame = frame;
@@ -370,6 +478,79 @@ class SimulationEngine {
           mode: 'playback',
           timestamp: Date.now(),
         };
+      }
+    }
+
+    if (this.mode === 'playlist' && this.playlist && this.playlist.steps && this.playlist.steps.length > 0) {
+      const effectiveDt = dt * this.speed;
+      this.playlistStepElapsed += effectiveDt;
+      this.playlistTotalElapsed += effectiveDt;
+
+      const currentStep = this.playlist.steps[this.playlistStepIndex];
+      const stepDuration = (currentStep && currentStep.durationSeconds > 0) ? currentStep.durationSeconds : 30;
+
+      // Check if current step has finished
+      if (this.playlistStepElapsed >= stepDuration) {
+        const hasNext = (this.playlistStepIndex + 1 < this.playlist.steps.length) || this.playlist.loop;
+        if (hasNext) {
+          const nextIdx = (this.playlistStepIndex + 1) % this.playlist.steps.length;
+          this.transitionFromFrame = this.lastFrame;
+          this.playlistStepIndex = nextIdx;
+          this.playlistStepElapsed = 0;
+          this.loadCurrentPlaylistStep();
+
+          if (this.playlist.transitionType === 'smooth' && (this.playlist.transitionDuration || 3.0) > 0) {
+            this.isTransitioning = true;
+            this.transitionElapsed = 0;
+          }
+        }
+      }
+
+      // Step frame from datasetFrames
+      let stepFrame = null;
+      if (this.datasetFrames.length > 0) {
+        this.datasetAccumulator += this.speed;
+        const step = Math.floor(this.datasetAccumulator);
+        if (step >= 1) {
+          this.datasetAccumulator -= step;
+          this.datasetIndex = (this.datasetIndex + step) % this.datasetFrames.length;
+        }
+        stepFrame = this.datasetFrames[this.datasetIndex];
+      }
+
+      let frame = stepFrame ? { ...stepFrame, mode: 'playlist', timestamp: Date.now() } : (this.lastFrame ? { ...this.lastFrame, mode: 'playlist', timestamp: Date.now() } : null);
+
+      // Crossfade transition blending
+      const transitionDuration = this.playlist.transitionDuration || 3.0;
+      if (this.isTransitioning && this.transitionFromFrame && frame) {
+        this.transitionElapsed += effectiveDt;
+        const t = Math.min(1.0, this.transitionElapsed / transitionDuration);
+        frame = this.blendFrames(this.transitionFromFrame, frame, t);
+        if (t >= 1.0) {
+          this.isTransitioning = false;
+        }
+      }
+
+      if (frame) {
+        const totalPlaylistSeconds = this.playlist.steps.reduce((acc, s) => acc + (s.durationSeconds || 30), 0);
+        frame.playlist_state = {
+          isActive: true,
+          playlistId: this.playlist.id || '',
+          playlistName: this.playlist.name || '',
+          currentStepIndex: this.playlistStepIndex,
+          totalSteps: this.playlist.steps.length,
+          currentStepName: currentStep?.name || `Stage ${this.playlistStepIndex + 1}`,
+          recordingFile: currentStep?.recordingFile || '',
+          stepElapsedSeconds: Number(this.playlistStepElapsed.toFixed(1)),
+          stepDurationSeconds: stepDuration,
+          playlistElapsedSeconds: Number(this.playlistTotalElapsed.toFixed(1)),
+          totalPlaylistSeconds,
+          isTransitioning: this.isTransitioning,
+          transitionProgress: this.isTransitioning ? Number((this.transitionElapsed / transitionDuration).toFixed(2)) : 0.0,
+        };
+
+        this.lastFrame = frame;
+        return frame;
       }
     }
 
@@ -517,6 +698,22 @@ function startSimDataServer(options = {}) {
   const bundledRecordingsDir = path.join(__dirname, '..', 'assets', 'recordings');
   const recordingsDir = options.recordingsDir || process.env.SIMDATA_RECORDINGS_DIR || bundledRecordingsDir;
 
+  const bundledPlaylistsDir = path.join(__dirname, '..', 'assets', 'playlists');
+  const playlistsDir = options.playlistsDir || process.env.SIMDATA_PLAYLISTS_DIR || bundledPlaylistsDir;
+
+  const resolveRecordingContent = (filename) => {
+    let p = path.join(recordingsDir, filename);
+    if (!fs.existsSync(p) && recordingsDir !== bundledRecordingsDir) {
+      p = path.join(bundledRecordingsDir, filename);
+    }
+    if (fs.existsSync(p)) {
+      try {
+        return fs.readFileSync(p, 'utf8');
+      } catch (e) {}
+    }
+    return null;
+  };
+
   const engine = new SimulationEngine();
 
   // Preload default dataset so engine is instantly ready for playback
@@ -643,6 +840,68 @@ function startSimDataServer(options = {}) {
           console.error('[SimData] Error writing recording file:', err);
           res.writeHead(500, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'Failed to write recording file: ' + err.message }));
+        }
+      });
+      return;
+    }
+
+    // Playlists API: List all available scenarios
+    if (req.url === '/api/playlists' && req.method === 'GET') {
+      const playlistMap = new Map();
+      const loadFromDir = (dir) => {
+        if (fs.existsSync(dir)) {
+          try {
+            fs.readdirSync(dir).filter(f => f.endsWith('.json')).forEach(f => {
+              try {
+                const data = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'));
+                if (data && data.steps && Array.isArray(data.steps)) {
+                  playlistMap.set(data.id || f.replace('.json', ''), data);
+                }
+              } catch (e) {}
+            });
+          } catch (e) {}
+        }
+      };
+      loadFromDir(bundledPlaylistsDir);
+      loadFromDir(playlistsDir);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ playlists: Array.from(playlistMap.values()) }));
+      return;
+    }
+
+    // Playlists API: Save custom scenario
+    if (req.url === '/api/playlists' && req.method === 'POST') {
+      let body = '';
+      req.on('data', chunk => {
+        body += chunk;
+        if (body.length > 5 * 1024 * 1024) {
+          res.writeHead(413, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Payload too large' }));
+          req.destroy();
+        }
+      });
+      req.on('end', () => {
+        try {
+          const parsed = JSON.parse(body);
+          const playlist = parsed.playlist || parsed;
+          if (!playlist || !Array.isArray(playlist.steps)) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Invalid playlist object' }));
+            return;
+          }
+          const id = (playlist.id || playlist.name || `playlist_${Date.now()}`).toLowerCase().replace(/[^a-z0-9_\-]/g, '_');
+          playlist.id = id;
+          if (!fs.existsSync(playlistsDir)) {
+            fs.mkdirSync(playlistsDir, { recursive: true });
+          }
+          const filePath = path.join(playlistsDir, `${id}.json`);
+          fs.writeFileSync(filePath, JSON.stringify(playlist, null, 2), 'utf8');
+
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true, playlist }));
+        } catch (err) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: err.message }));
         }
       });
       return;
@@ -796,6 +1055,16 @@ function startSimDataServer(options = {}) {
         } else if (payload.type === 'SET_SPEED') {
           engine.setSpeed(payload.speed);
           broadcastControlState();
+        } else if (payload.type === 'SET_PLAYLIST') {
+          if (payload.playlist) {
+            engine.setPlaylist(payload.playlist, resolveRecordingContent);
+          }
+        } else if (payload.type === 'PLAYLIST_NEXT') {
+          engine.nextPlaylistStep(resolveRecordingContent);
+        } else if (payload.type === 'PLAYLIST_PREV') {
+          engine.prevPlaylistStep(resolveRecordingContent);
+        } else if (payload.type === 'PLAYLIST_SEEK') {
+          engine.seekPlaylistStep(payload.stepIndex, resolveRecordingContent);
         } else if (payload.type === 'PLAYBACK_FRAME' && payload.frame) {
           engine.setPlaybackFrame(payload.frame);
           broadcastTelemetry(payload.frame, ws);
@@ -847,7 +1116,8 @@ function startSimDataServer(options = {}) {
         calm_index: telemetry.states?.calm_index ?? 0.5,
         focus_index: telemetry.states?.focus_index ?? 0.5,
         artifact_flag: Boolean(telemetry.states?.artifact_flag),
-      }
+      },
+      playlist_state: telemetry.playlist_state || undefined,
     };
 
     const strJson = JSON.stringify(jsonPayload);

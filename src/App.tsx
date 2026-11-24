@@ -9,7 +9,9 @@ import {
   PresetArchetype,
   ArtifactType,
   ManualOverrides,
-  DatasetPlaybackState
+  DatasetPlaybackState,
+  PlaylistScenario,
+  PlaylistPlaybackState,
 } from './engine/types';
 
 import { Header } from './components/Header';
@@ -109,6 +111,11 @@ export const App: React.FC = () => {
   const [selectedDataset, setSelectedDataset] = useState<string>('meditation_deep_flow.json');
   const [playbackState, setPlaybackState] = useState<DatasetPlaybackState>(datasetPlayer.current.getState());
 
+  // Playlist / Scenario States
+  const [playlists, setPlaylists] = useState<PlaylistScenario[]>([]);
+  const [activePlaylist, setActivePlaylist] = useState<PlaylistScenario | null>(null);
+  const [playlistState, setPlaylistState] = useState<PlaylistPlaybackState | null>(null);
+
   // Modals
   const [figmaModalOpen, setFigmaModalOpen] = useState<boolean>(false);
   const [payloadModalOpen, setPayloadModalOpen] = useState<boolean>(false);
@@ -159,6 +166,9 @@ export const App: React.FC = () => {
               }
             } else if (data.biometrics) {
               setTelemetry(data);
+              if (data.playlist_state) {
+                setPlaylistState(data.playlist_state);
+              }
               setOscPackets((prev) => prev + 10);
 
               sessionHistory.current.push(data);
@@ -250,7 +260,21 @@ export const App: React.FC = () => {
       } catch (e) {}
     };
 
+    const fetchPlaylists = async () => {
+      try {
+        const res = await fetch(`${getHttpBaseUrl()}/api/playlists`);
+        if (res.ok) {
+          const json = await res.json();
+          if (Array.isArray(json.playlists) && json.playlists.length > 0) {
+            setPlaylists(json.playlists);
+            setActivePlaylist(json.playlists[0]);
+          }
+        }
+      } catch (e) {}
+    };
+
     fetchAvailableDatasets();
+    fetchPlaylists();
     loadDefaultDataset();
   }, []);
 
@@ -523,6 +547,58 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleOpenPlaylistsFolder = () => {
+    if (typeof window !== 'undefined' && (window as any).simDataDesktop?.openPlaylistsFolder) {
+      (window as any).simDataDesktop.openPlaylistsFolder();
+    }
+  };
+
+  const handleSelectPlaylist = (playlist: PlaylistScenario) => {
+    setActivePlaylist(playlist);
+    if (isPaused) {
+      setIsPaused(false);
+      localEngine.current.setPaused(false);
+      sendControlMessage({ type: 'SET_PAUSED', paused: false });
+    }
+    sendControlMessage({ type: 'SET_MODE', mode: 'playlist' });
+    sendControlMessage({ type: 'SET_PLAYLIST', playlist });
+  };
+
+  const handleSavePlaylist = async (playlist: PlaylistScenario): Promise<boolean> => {
+    try {
+      const res = await fetch(`${getHttpBaseUrl()}/api/playlists`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ playlist }),
+      });
+      if (res.ok) {
+        setPlaylists((prev) => {
+          const idx = prev.findIndex((p) => p.id === playlist.id);
+          if (idx >= 0) {
+            const updated = [...prev];
+            updated[idx] = playlist;
+            return updated;
+          }
+          return [playlist, ...prev];
+        });
+        return true;
+      }
+    } catch (e) {}
+    return false;
+  };
+
+  const handleNextPlaylistStep = () => {
+    sendControlMessage({ type: 'PLAYLIST_NEXT' });
+  };
+
+  const handlePrevPlaylistStep = () => {
+    sendControlMessage({ type: 'PLAYLIST_PREV' });
+  };
+
+  const handleSeekPlaylistStep = (stepIndex: number) => {
+    sendControlMessage({ type: 'PLAYLIST_SEEK', stepIndex });
+  };
+
   const handleUploadDataset = async (
     file: File
   ): Promise<{ success: boolean; frameCount?: number; format?: string; message?: string; error?: string }> => {
@@ -696,6 +772,17 @@ export const App: React.FC = () => {
                 onDownloadSample={handleDownloadSample}
                 onOpenFolder={handleOpenRecordingsFolder}
                 isDesktop={typeof window !== 'undefined' && Boolean((window as any).simDataDesktop?.isElectron)}
+                playlists={playlists}
+                activePlaylist={activePlaylist}
+                playlistPlaybackState={playlistState}
+                isPaused={isPaused}
+                onSelectPlaylist={handleSelectPlaylist}
+                onSavePlaylist={handleSavePlaylist}
+                onNextPlaylistStep={handleNextPlaylistStep}
+                onPrevPlaylistStep={handlePrevPlaylistStep}
+                onSeekPlaylistStep={handleSeekPlaylistStep}
+                onOpenPlaylistsFolder={handleOpenPlaylistsFolder}
+                onTogglePlay={handleTogglePlayPause}
               />
             </TabsContent>
           </Tabs>

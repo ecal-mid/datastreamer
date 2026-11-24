@@ -1,0 +1,28 @@
+{
+  "id": "adaptive_rapid_test",
+  "name": "Adaptive UI Rapid Cycle (45s)",
+  "description": "Rapid 15-second cycles designed specifically for rapid interaction design and Figma variable animation testing.",
+  "loop": true,
+  "transitionType": "smooth",
+  "transitionDuration": 2.0,
+  "steps": [
+    {
+      "id": "step_1",
+      "name": "Calm State",
+      "recordingFile": "meditation_deep_flow.json",
+      "durationSeconds": 15
+    },
+    {
+      "id": "step_2",
+      "name": "High Arousal",
+      "recordingFile": "cognitive_stress_overload.json",
+      "durationSeconds": 15
+    },
+    {
+      "id": "step_3",
+      "name": "Paced Breathing",
+      "recordingFile": "respiratory_coherence_training.csv",
+      "durationSeconds": 15
+    }
+  ]
+}

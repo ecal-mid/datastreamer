@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { DatasetPlaybackState } from '../engine/types';
+import { DatasetPlaybackState, PlaylistScenario, PlaylistPlaybackState } from '../engine/types';
 import {
   FileText,
   HardDrive,
@@ -12,10 +12,12 @@ import {
   HeartPulse,
   Sparkles,
   FileSpreadsheet,
+  Layers,
 } from 'lucide-react';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
+import { PlaylistStudio } from './PlaylistStudio';
 
 interface DatasetTabProps {
   playbackState?: DatasetPlaybackState;
@@ -32,6 +34,17 @@ interface DatasetTabProps {
   onDownloadSample?: (sampleName: string) => void;
   onOpenFolder?: () => void;
   isDesktop?: boolean;
+  // Playlist Scenario Props
+  playlists?: PlaylistScenario[];
+  activePlaylist?: PlaylistScenario | null;
+  playlistPlaybackState?: PlaylistPlaybackState | null;
+  isPaused?: boolean;
+  onSelectPlaylist?: (playlist: PlaylistScenario) => void;
+  onSavePlaylist?: (playlist: PlaylistScenario) => Promise<boolean>;
+  onNextPlaylistStep?: () => void;
+  onPrevPlaylistStep?: () => void;
+  onSeekPlaylistStep?: (index: number) => void;
+  onOpenPlaylistsFolder?: () => void;
 }
 
 export const DatasetTab: React.FC<DatasetTabProps> = ({
@@ -39,13 +52,28 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({
   availableDatasets,
   selectedDataset,
   onSelectDataset,
+  onTogglePlay,
+  onToggleLoop,
+  onSeek,
+  onSetSpeed,
   onDownloadDataset,
   onUploadDataset,
   onDownloadTemplate,
   onDownloadSample,
   onOpenFolder,
   isDesktop = false,
+  playlists = [],
+  activePlaylist = null,
+  playlistPlaybackState = null,
+  isPaused = false,
+  onSelectPlaylist,
+  onSavePlaylist,
+  onNextPlaylistStep,
+  onPrevPlaylistStep,
+  onSeekPlaylistStep,
+  onOpenPlaylistsFolder,
 }) => {
+  const [subTab, setSubTab] = useState<'recordings' | 'playlists'>('recordings');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [uploadStatus, setUploadStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -109,47 +137,97 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Top Header & Quick Action Buttons */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2 text-xs font-mono uppercase text-foreground font-semibold">
-          <HardDrive className="w-3.5 h-3.5 text-primary" />
-          <span>Dataset Playback Engine (assets/recordings/)</span>
+      {/* Sub-mode Segmented Switcher: Single Recordings vs Scenario Playlists */}
+      <div className="flex flex-wrap items-center justify-between gap-2 pb-1 border-b border-border/80">
+        <div className="flex items-center gap-1 bg-secondary/40 p-0.5 rounded-lg border border-border/70 text-xs font-mono">
+          <button
+            onClick={() => setSubTab('recordings')}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-md transition-all cursor-pointer ${
+              subTab === 'recordings'
+                ? 'bg-primary text-primary-foreground font-bold shadow-xs'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <HardDrive className="w-3.5 h-3.5" />
+            <span>Single Recordings</span>
+          </button>
+          <button
+            onClick={() => setSubTab('playlists')}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-md transition-all cursor-pointer ${
+              subTab === 'playlists'
+                ? 'bg-primary text-primary-foreground font-bold shadow-xs'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Layers className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Scenario Playlists</span>
+            {playlists && playlists.length > 0 && (
+              <Badge variant="secondary" className="text-[9px] px-1 py-0 h-4 font-mono">
+                {playlists.length}
+              </Badge>
+            )}
+          </button>
         </div>
 
-        <div className="flex items-center gap-2">
-          {onDownloadTemplate && (
-            <Button
-              variant="outline"
-              size="xs"
-              onClick={onDownloadTemplate}
-              className="gap-1.5 font-mono text-[11px]"
-              title="Download standardized blank CSV template with all 17 biometric columns"
-            >
-              <Download className="w-3 h-3 text-muted-foreground" />
-              <span>Blank CSV Template</span>
-            </Button>
-          )}
+        {subTab === 'recordings' ? (
+          <div className="flex items-center gap-2">
+            {onDownloadTemplate && (
+              <Button
+                variant="outline"
+                size="xs"
+                onClick={onDownloadTemplate}
+                className="gap-1.5 font-mono text-[11px]"
+                title="Download standardized blank CSV template with all 17 biometric columns"
+              >
+                <Download className="w-3 h-3 text-muted-foreground" />
+                <span>Blank CSV Template</span>
+              </Button>
+            )}
 
-          {isDesktop && onOpenFolder && (
-            <Button
-              variant="outline"
-              size="xs"
-              onClick={onOpenFolder}
-              className="gap-1.5 font-mono text-[11px]"
-              title="Open the local assets/recordings directory in macOS Finder"
-            >
-              <FolderOpen className="w-3 h-3 text-primary" />
-              <span>Open Folder</span>
-            </Button>
-          )}
+            {isDesktop && onOpenFolder && (
+              <Button
+                variant="outline"
+                size="xs"
+                onClick={onOpenFolder}
+                className="gap-1.5 font-mono text-[11px]"
+                title="Open the local assets/recordings directory in macOS Finder"
+              >
+                <FolderOpen className="w-3 h-3 text-primary" />
+                <span>Open Folder</span>
+              </Button>
+            )}
 
-          <Badge variant="secondary" className="font-mono text-[10px]">
-            30 Hz Frame Stepper
-          </Badge>
-        </div>
+            <Badge variant="secondary" className="font-mono text-[10px]">
+              30 Hz Frame Stepper
+            </Badge>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1.5 text-xs font-mono text-muted-foreground">
+            <Sparkles className="w-3 h-3 text-primary" />
+            <span>Multi-Stage Physiological Journey Engine</span>
+          </div>
+        )}
       </div>
 
-      {/* Dataset Selection Bar with Direct Download Buttons */}
+      {subTab === 'playlists' ? (
+        <PlaylistStudio
+          playlists={playlists}
+          activePlaylist={activePlaylist}
+          playlistPlaybackState={playlistPlaybackState}
+          availableDatasets={availableDatasets}
+          isPaused={Boolean(isPaused)}
+          onSelectPlaylist={onSelectPlaylist || (() => {})}
+          onSavePlaylist={onSavePlaylist || (async () => false)}
+          onTogglePlayPause={onTogglePlay || (() => {})}
+          onNextStep={onNextPlaylistStep}
+          onPrevStep={onPrevPlaylistStep}
+          onSeekStep={onSeekPlaylistStep}
+          onOpenFolder={onOpenPlaylistsFolder || onOpenFolder}
+          isDesktop={isDesktop}
+        />
+      ) : (
+        <>
+          {/* Dataset Selection Bar with Direct Download Buttons */}
       <Card className="bg-card/60 border-border p-3.5 space-y-2.5">
         <div className="flex items-center justify-between text-[11px] font-mono uppercase text-muted-foreground">
           <span>Active Recordings Library ({availableDatasets.length})</span>
@@ -338,6 +416,8 @@ export const DatasetTab: React.FC<DatasetTabProps> = ({
             ✕
           </button>
         </div>
+      )}
+        </>
       )}
     </div>
   );

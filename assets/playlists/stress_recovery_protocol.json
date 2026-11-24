@@ -1,0 +1,28 @@
+{
+  "id": "stress_recovery_protocol",
+  "name": "Stress & Recovery Protocol",
+  "description": "Baseline calm transitioning into sudden acute cognitive stress, followed by guided respiration coherence recovery.",
+  "loop": true,
+  "transitionType": "smooth",
+  "transitionDuration": 3.0,
+  "steps": [
+    {
+      "id": "step_1",
+      "name": "Baseline Rest",
+      "recordingFile": "meditation_deep_flow.json",
+      "durationSeconds": 30
+    },
+    {
+      "id": "step_2",
+      "name": "Cognitive Stress Surge",
+      "recordingFile": "cognitive_stress_overload.json",
+      "durationSeconds": 45
+    },
+    {
+      "id": "step_3",
+      "name": "Guided Coherence Recovery",
+      "recordingFile": "respiratory_coherence_training.csv",
+      "durationSeconds": 60
+    }
+  ]
+}

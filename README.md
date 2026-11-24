@@ -1,10 +1,10 @@
 # SimData — Biofeedback & Neurofeedback Simulator & Bridge
 
-[![Version](https://img.shields.io/badge/version-1.1.0-06b6d4?style=flat-square)](https://github.com/ecal-mid/datastreamer)
+[![Version](https://img.shields.io/badge/version-1.2.0-06b6d4?style=flat-square)](https://github.com/ecal-mid/datastreamer)
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald?style=flat-square)](https://opensource.org/licenses/MIT)
 [![Stream: 30Hz](https://img.shields.io/badge/stream-30Hz-purple?style=flat-square)](https://github.com/ecal-mid/datastreamer)
 
-**SimData** (v1.1.0) is a lightweight, zero-configuration desktop application and companion Figma plugin designed for interaction design students, creative technologists, and researchers prototyping adaptive biofeedback and neurofeedback interfaces without physical biometric sensors.
+**SimData** (v1.2.0) is a lightweight, zero-configuration desktop application and companion Figma plugin designed for interaction design students, creative technologists, and researchers prototyping adaptive biofeedback and neurofeedback interfaces without physical biometric sensors.
 
 Built with **shadcn/ui** and Tailwind CSS, SimData generates and broadcasts physiologically plausible real-time biosignals at **30 Hz** simultaneously across two network protocols:
 1. **WebSocket (`ws://127.0.0.1:8081` / `:8080`)** — Structured JSON stream for web prototypes, Figma, and TouchDesigner `WebSocket DAT`.
@@ -16,26 +16,26 @@ Built with **shadcn/ui** and Tailwind CSS, SimData generates and broadcasts phys
 ## Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                       SIMDATA CORE                          │
-│                                                             │
-│  ┌───────────────────────┐       ┌───────────────────────┐  │
-│  │ Synthetic Generator   │       │ Dataset Playback      │  │
-│  │ (RSA, Perlin, Presets)│       │ (CSV/JSON Parser)     │  │
-│  └───────────┬───────────┘       └───────────┬───────────┘  │
-│              └───────────────┬───────────────┘              │
-│                              ▼                              │
-│                 State Engine (Ticker @ 30Hz)                │
-│                              │                              │
-│        ┌─────────────────────┴─────────────────────┐        │
-│        ▼                                           ▼        │
-│  WebSocket Server (:8081/:8080)           OSC UDP Client (:9000)
-│  (JSON Payloads)                          (Semantic Address Tree)
-└────────┬───────────────────────────────────────────┬────────┘
-         │                                           │
-         ├──────────────────────────┐                │
-         ▼                          ▼                ▼
-   Figma Plugin (10Hz)       TouchDesigner / Web   Max/MSP / TD
+┌─────────────────────────────────────────────────────────────────────────┐
+│                              SIMDATA CORE                               │
+│                                                                         │
+│  ┌────────────────────────┐  ┌───────────────────┐  ┌────────────────┐  │
+│  │  Synthetic Generator   │  │ Single Recordings │  │ Scenario Engine│  │
+│  │ (RSA, Perlin, Presets) │  │ (CSV/JSON Parser) │  │  (Playlists)   │  │
+│  └───────────┬────────────┘  └─────────┬─────────┘  └───────┬────────┘  │
+│              └─────────────────────────┼────────────────────┘           │
+│                                        ▼                                │
+│                           State Engine (Ticker @ 30Hz)                  │
+│                                        │                                │
+│        ┌───────────────────────────────┴───────────────────────┐        │
+│        ▼                                                       ▼        │
+│  WebSocket Server (:8081/:8080)                       OSC UDP Client (:9000)
+│  (JSON Payloads)                                      (Semantic Address Tree)
+└────────┬───────────────────────────────────────────────────────┬────────┘
+         │                                                       │
+         ├──────────────────────────┐                            │
+         ▼                          ▼                            ▼
+   Figma Plugin (10Hz)       TouchDesigner / Web               Max/MSP / TD
 ```
 
 ---
@@ -44,7 +44,7 @@ Built with **shadcn/ui** and Tailwind CSS, SimData generates and broadcasts phys
 
 Pre-built binaries for Apple Silicon Macs are available on [GitHub Releases](https://github.com/ecal-mid/datastreamer/releases):
 
-1. Download **`SimData-1.1.0-arm64.dmg`** and drag **SimData.app** into your `/Applications` folder.
+1. Download **`SimData-1.2.0-arm64.dmg`** and drag **SimData.app** into your `/Applications` folder.
 2. **First Launch (macOS Gatekeeper Note):**  
    If macOS displays *"SimData is damaged and can't be opened"*, open **Terminal** and run:
    ```bash
@@ -161,6 +161,27 @@ Load, convert, and manage session recordings in `assets/recordings/`:
 * **Direct File Download & Templates**: Click the download icon next to any recording card to save raw `.csv` or `.json` files, or click **Blank CSV Template** for a blank 17-column header template.
 * **Desktop "Open Folder"**: Click **Open Folder** in the desktop app to reveal `assets/recordings/` natively in macOS Finder.
 * **Transport Controls**: **Play**, **Pause**, **Loop Toggle**, **Scrubber Timeline Bar**, and **Speed Multipliers** (`0.5x`, `1.0x`, `2.0x`, `4.0x`).
+
+### Mode D: Scenario Playlists & Sequencing Engine
+Chain multiple recordings into automated multi-stage physiological journeys (e.g., Baseline 30s → Stress 45s → Recovery 60s):
+* **Dual-Mode Dataset Interface**: Easily toggle between **`📄 Single Recordings`** and **`🔀 Scenario Playlists`** via the top segmented control.
+* **Non-Destructive Stage Sequencing**:
+  * Chain any number of pre-bundled, imported Muse, WESAD, or custom CSV/JSON recordings.
+  * Configure custom stage durations (e.g. 15s, 30s, 60s, or full file length) without modifying underlying recordings.
+  * Smooth physiological transitions: Choose between seamless **3-second cubic smoothstep crossfades** (`blendFrames`) or **instant cuts** between stages.
+* **Live Journey HUD & Dynamic Transport**:
+  * **Dual Progress Trackers**: Displays real-time progress for the **Current Stage** and the **Overall Journey**.
+  * **Stage Navigation**: Instant **`⏮ Prev Stage`** and **`⏭ Next Stage`** jump buttons, stage index countdown (`Stage 2 / 3`), and stage name chip.
+  * **Continuous Loop**: Toggle scenario looping for hands-free exhibition kiosks or long design testing sessions.
+* **Scenario Studio & Native Persistence**:
+  * **Visual Stage Cards**: Reorder, duplicate, add stages, and select source recordings with instant dropdown selectors.
+  * **Save & Manage Scenarios**: Save scenarios locally to `~/Library/Application Support/simdata/playlists/` with instant one-click folder reveal in macOS Finder.
+  * **Export & Import**: Share portable `.playlist.json` scenario files across your team or design classroom with 1-click **Export** and **Import** buttons.
+* **Pre-bundled Factory Scenarios**:
+  * `Stress-Recovery Protocol`: 3-stage protocol (30s Baseline → 45s Stress Overload → 60s Deep Recovery).
+  * `Focus to Fatigue Transition`: 3-stage study (45s High Flow → 45s Cognitive Strain → 45s Drowsiness).
+  * `Adaptive Rapid Test (15s cycles)`: Fast 15s rapid-cycle scenario designed for iterative Figma prototype stress-testing.
+* **Server-Side Background Execution**: The playlist sequencer ticks inside the Node.js server engine (`server/bioServer.cjs`) at **30 Hz**, ensuring zero throttling from Figma or macOS background tab prioritization.
 
 ### Manual Overrides & Artifact Injection (Puppeteer Panel)
 * Force any parameter ($0.0\text{–}1.0$) with individual lock toggles or release all.
