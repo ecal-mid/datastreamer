@@ -428,21 +428,43 @@ export const PlaylistStudio: React.FC<PlaylistStudioProps> = ({
 
             <Button
               size="xs"
-              variant={isCurrentlyPlaying ? 'secondary' : 'default'}
+              variant={isCurrentlyPlaying && !isPaused ? 'secondary' : 'default'}
               onClick={() => {
-                onSelectPlaylist(draft);
-                if (isPaused) onTogglePlayPause();
+                if (isCurrentlyPlaying) {
+                  onTogglePlayPause();
+                } else {
+                  onSelectPlaylist(draft);
+                  if (isPaused) onTogglePlayPause();
+                }
               }}
-              className="gap-1.5 font-mono text-xs"
+              className={`gap-1.5 font-mono text-xs ${
+                isCurrentlyPlaying && !isPaused
+                  ? 'border border-amber-500/40 text-amber-300 hover:bg-amber-500/20'
+                  : ''
+              }`}
+              title={
+                isCurrentlyPlaying
+                  ? isPaused
+                    ? 'Resume scenario stream'
+                    : 'Pause scenario stream'
+                  : 'Start streaming this scenario'
+              }
             >
-              {isCurrentlyPlaying && !isPaused ? (
-                <>
-                  <Pause className="w-3 h-3" />
-                  <span>Streaming</span>
-                </>
+              {isCurrentlyPlaying ? (
+                isPaused ? (
+                  <>
+                    <Play className="w-3 h-3 fill-current" />
+                    <span>Resume Scenario</span>
+                  </>
+                ) : (
+                  <>
+                    <Pause className="w-3 h-3 fill-current" />
+                    <span>Pause Scenario</span>
+                  </>
+                )
               ) : (
                 <>
-                  <Play className="w-3 h-3" />
+                  <Play className="w-3 h-3 fill-current" />
                   <span>Play Scenario</span>
                 </>
               )}
@@ -456,8 +478,11 @@ export const PlaylistStudio: React.FC<PlaylistStudioProps> = ({
         <Card className="bg-primary/5 border-primary/40 p-3 space-y-2.5 shadow-[0_0_12px_#06b6d412]">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <Badge variant="cyan" className="font-mono text-[9px] px-2 py-0.5">
-                ● LIVE SCENARIO
+              <Badge
+                variant={isPaused ? "warning" : "cyan"}
+                className="font-mono text-[9px] px-2 py-0.5"
+              >
+                {isPaused ? "❚❚ SCENARIO PAUSED" : "● LIVE SCENARIO"}
               </Badge>
               <span className="text-xs font-mono font-bold text-foreground">
                 Stage {currentStepIdx + 1} of {draft.steps.length}:{' '}
@@ -472,7 +497,7 @@ export const PlaylistStudio: React.FC<PlaylistStudioProps> = ({
               )}
             </div>
 
-            {/* Stage Skipping Controls */}
+            {/* Live Scenario Transport Controls */}
             <div className="flex items-center gap-1">
               <Button
                 variant="outline"
@@ -483,6 +508,21 @@ export const PlaylistStudio: React.FC<PlaylistStudioProps> = ({
               >
                 <SkipBack className="w-3 h-3" />
                 <span>Prev</span>
+              </Button>
+
+              <Button
+                variant="outline"
+                size="xs"
+                onClick={onTogglePlayPause}
+                className={`h-6 px-2 text-[10px] font-mono gap-1 ${
+                  isPaused
+                    ? 'text-amber-400 border-amber-500/40 hover:bg-amber-500/20'
+                    : 'text-emerald-400 border-emerald-500/40 hover:bg-emerald-500/20'
+                }`}
+                title={isPaused ? "Resume scenario stream" : "Pause scenario stream"}
+              >
+                {isPaused ? <Play className="w-3 h-3 fill-current" /> : <Pause className="w-3 h-3 fill-current" />}
+                <span>{isPaused ? 'Resume' : 'Pause'}</span>
               </Button>
 
               <Button
