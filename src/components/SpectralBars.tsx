@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { EegBands } from '../engine/types';
-import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
+import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 
 interface SpectralBarsProps {
@@ -25,47 +25,130 @@ const BANDS: BandDef[] = [
 ];
 
 export const SpectralBars: React.FC<SpectralBarsProps> = ({ eeg }) => {
+  const [viewMode, setViewMode] = useState<'compact' | 'vertical'>(() => {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const saved = window.localStorage.getItem('simdata_spectral_view');
+      if (saved === 'compact' || saved === 'vertical') return saved;
+    }
+    return 'compact';
+  });
+
+  const handleToggleMode = (mode: 'compact' | 'vertical') => {
+    setViewMode(mode);
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.setItem('simdata_spectral_view', mode);
+      }
+    } catch (e) {}
+  };
+
   return (
-    <Card className="bg-card/60 border-border p-3">
+    <Card className="bg-card/60 border-border p-2.5 sm:p-3">
+      {/* Top Header Bar with View Switcher */}
       <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground font-semibold">
-          EEG Spectral Band Power (Normalized 0.0 – 1.0)
-        </span>
-        <Badge variant="secondary" className="font-mono text-[9px]">
-          1D Perlin Organic Drift
-        </Badge>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground font-semibold">
+            EEG Spectral Band Power (0.0 – 1.0)
+          </span>
+          <Badge variant="secondary" className="font-mono text-[9px] py-0 px-1.5 h-4 hidden sm:inline-flex">
+            1D Drift
+          </Badge>
+        </div>
+
+        {/* Mode Toggle: Compact Horizontal vs Vertical Equalizer */}
+        <div className="flex items-center gap-0.5 bg-secondary/60 p-0.5 rounded border border-border/70 text-[10px] font-mono">
+          <button
+            onClick={() => handleToggleMode('compact')}
+            className={`px-2 py-0.5 rounded transition-all cursor-pointer ${
+              viewMode === 'compact'
+                ? 'bg-primary text-primary-foreground font-bold shadow-xs'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+            title="Compact horizontal meters (low profile)"
+          >
+            Compact
+          </button>
+          <button
+            onClick={() => handleToggleMode('vertical')}
+            className={`px-2 py-0.5 rounded transition-all cursor-pointer ${
+              viewMode === 'vertical'
+                ? 'bg-primary text-primary-foreground font-bold shadow-xs'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+            title="Vertical spectrum equalizer bars"
+          >
+            Bars
+          </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-6 gap-2">
-        {BANDS.map((band) => {
-          const val = eeg[band.key] ?? 0;
-          const pct = Math.min(100, Math.max(2, Math.round(val * 100)));
+      {viewMode === 'compact' ? (
+        /* Ultra-Compact Horizontal Meters (Height ~36px) */
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+          {BANDS.map((band) => {
+            const val = eeg[band.key] ?? 0;
+            const pct = Math.min(100, Math.max(2, Math.round(val * 100)));
 
-          return (
-            <div
-              key={band.key}
-              className="bg-secondary/40 border border-border/70 rounded p-2 flex flex-col justify-between"
-            >
-              <div className="flex items-baseline justify-between mb-1">
-                <span className="text-xs font-bold text-foreground">{band.name}</span>
-                <span className="text-[10px] text-muted-foreground font-mono">{band.range}</span>
-              </div>
+            return (
+              <div
+                key={band.key}
+                className="bg-secondary/35 border border-border/70 rounded-md px-2.5 py-1.5 flex flex-col justify-between gap-1 shadow-xs"
+              >
+                <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className={`w-2 h-2 rounded-full ${band.color} ${band.glow} shrink-0`} />
+                    <span className="font-semibold text-foreground text-xs truncate">{band.name}</span>
+                    <span className="text-[10px] text-muted-foreground/70 font-mono hidden xl:inline">{band.range}</span>
+                  </div>
+                  <span className="font-mono text-xs font-bold text-foreground shrink-0 ml-1">
+                    {val.toFixed(2)}
+                  </span>
+                </div>
 
-              {/* Vertical level bar */}
-              <div className="w-full bg-secondary/80 rounded h-16 relative flex items-end p-0.5 overflow-hidden">
-                <div
-                  className={`w-full rounded-sm ${band.color} ${band.glow} transition-all duration-75`}
-                  style={{ height: `${pct}%` }}
-                />
+                {/* Sleek horizontal level bar */}
+                <div className="w-full bg-secondary/80 rounded-full h-1.5 overflow-hidden">
+                  <div
+                    className={`h-full rounded-full ${band.color} ${band.glow} transition-all duration-75`}
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
               </div>
+            );
+          })}
+        </div>
+      ) : (
+        /* Low-Profile Vertical Equalizer Bars (Height ~70px) */
+        <div className="grid grid-cols-6 gap-2">
+          {BANDS.map((band) => {
+            const val = eeg[band.key] ?? 0;
+            const pct = Math.min(100, Math.max(2, Math.round(val * 100)));
 
-              <div className="mt-1.5 text-center font-mono text-xs font-bold text-foreground">
-                {val.toFixed(2)}
+            return (
+              <div
+                key={band.key}
+                className="bg-secondary/35 border border-border/70 rounded-md p-2 flex flex-col justify-between"
+              >
+                <div className="flex items-baseline justify-between mb-1">
+                  <span className="text-xs font-bold text-foreground">{band.name}</span>
+                  <span className="text-[10px] text-muted-foreground font-mono hidden sm:inline">{band.range}</span>
+                </div>
+
+                {/* Vertical level bar: h-10 (40px) instead of former h-16 (64px) */}
+                <div className="w-full bg-secondary/80 rounded h-10 relative flex items-end p-0.5 overflow-hidden">
+                  <div
+                    className={`w-full rounded-sm ${band.color} ${band.glow} transition-all duration-75`}
+                    style={{ height: `${pct}%` }}
+                  />
+                </div>
+
+                <div className="mt-1 text-center font-mono text-[11px] font-bold text-foreground">
+                  {val.toFixed(2)}
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </Card>
   );
 };
