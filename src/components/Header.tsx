@@ -136,10 +136,10 @@ export const Header: React.FC<HeaderProps> = ({
           {wsClientsCount > 0 && <span className="opacity-70">({wsClientsCount})</span>}
         </Badge>
 
-        {/* OSC UDP Status Badge */}
+        {/* OSC UDP Status Badge - Kept visible across all breakpoints */}
         <Badge
           variant="cyan"
-          className="hidden xl:flex items-center gap-1.5 py-1 px-2 font-mono text-[11px]"
+          className="flex items-center gap-1.5 py-1 px-2 font-mono text-[11px]"
           title="Broadcasting Open Sound Control UDP packets to 127.0.0.1:9000"
         >
           <Send className="w-3 h-3 text-primary" />
