@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { BioEngine } from './engine/BioEngine';
 import { DatasetPlayer } from './engine/DatasetPlayer';
-import { BioSonification } from './engine/BioSonification';
 import { importBiometricCsv } from './engine/converters';
 import {
   SimDataTelemetry,
@@ -72,7 +71,6 @@ export const App: React.FC = () => {
   // Engines
   const localEngine = useRef<BioEngine>(new BioEngine());
   const datasetPlayer = useRef<DatasetPlayer>(new DatasetPlayer());
-  const sonification = useRef<BioSonification>(new BioSonification());
 
   // App States
   const [telemetry, setTelemetry] = useState<SimDataTelemetry>(INITIAL_TELEMETRY);
@@ -85,7 +83,6 @@ export const App: React.FC = () => {
   const [activePreset, setActivePreset] = useState<PresetArchetype>('baseline');
   const [activeArtifact, setActiveArtifact] = useState<ArtifactType>('none');
   const [overrides, setOverrides] = useState<ManualOverrides>(localEngine.current.getOverrides());
-  const [audioEnabled, setAudioEnabled] = useState<boolean>(false);
 
   // Main Streamer Transport Controls State
   const [isPaused, setIsPaused] = useState<boolean>(false);
@@ -177,16 +174,6 @@ export const App: React.FC = () => {
 
               sessionHistory.current.push(data);
               if (sessionHistory.current.length > 900) sessionHistory.current.shift();
-
-              // Update audio sonification (only when not paused)
-              if (sonification.current.getIsEnabled() && !isPaused) {
-                sonification.current.update(
-                  data.biometrics.hrv.bpm,
-                  data.biometrics.respiration.value,
-                  data.biometrics.respiration.phase,
-                  0.5
-                );
-              }
             }
           } catch (e) {}
         };
@@ -293,30 +280,12 @@ export const App: React.FC = () => {
             setPlaybackState(datasetPlayer.current.getState());
             sessionHistory.current.push(frame);
             if (sessionHistory.current.length > 900) sessionHistory.current.shift();
-
-            if (sonification.current.getIsEnabled() && !isPaused) {
-              sonification.current.update(
-                frame.biometrics.hrv.bpm,
-                frame.biometrics.respiration.value,
-                frame.biometrics.respiration.phase,
-                0.5
-              );
-            }
           }
         } else {
           const frame = localEngine.current.tick(1 / 30);
           setTelemetry(frame);
           sessionHistory.current.push(frame);
           if (sessionHistory.current.length > 900) sessionHistory.current.shift();
-
-          if (sonification.current.getIsEnabled() && !isPaused) {
-            sonification.current.update(
-              frame.biometrics.hrv.bpm,
-              frame.biometrics.respiration.value,
-              frame.biometrics.respiration.phase,
-              0.5
-            );
-          }
         }
       }
     }, 1000 / 30);
@@ -376,12 +345,6 @@ export const App: React.FC = () => {
 
   const handleTriggerEdaSpike = () => {
     localEngine.current.triggerPhasicSpike();
-  };
-
-  const handleToggleAudio = () => {
-    const next = !audioEnabled;
-    setAudioEnabled(next);
-    sonification.current.setEnabled(next);
   };
 
   const handleExportCsv = () => {
@@ -707,8 +670,6 @@ export const App: React.FC = () => {
         speed={simSpeed}
         onTogglePlayPause={handleTogglePlayPause}
         onSetSpeed={handleSetSpeed}
-        audioEnabled={audioEnabled}
-        onToggleAudio={handleToggleAudio}
         onExportCsv={handleExportCsv}
         onOpenFigmaModal={() => setFigmaModalOpen(true)}
         onOpenPayloadModal={() => setPayloadModalOpen(true)}

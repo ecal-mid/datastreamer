@@ -5,8 +5,6 @@ import {
   Send,
   Layers,
   Code2,
-  Volume2,
-  VolumeX,
   Download,
   Play,
   Pause,
@@ -21,15 +19,13 @@ interface HeaderProps {
   wsClientsCount: number;
   wsPort?: number;
   oscTarget: string;
-  oscPackets: number;
+  oscPackets?: number;
   fps: number;
   mode: OperatingMode;
   isPaused?: boolean;
   speed?: number;
   onTogglePlayPause?: () => void;
   onSetSpeed?: (speed: number) => void;
-  audioEnabled?: boolean;
-  onToggleAudio?: () => void;
   onExportCsv?: () => void;
   onOpenFigmaModal: () => void;
   onOpenPayloadModal: () => void;
@@ -41,15 +37,12 @@ export const Header: React.FC<HeaderProps> = ({
   wsClientsCount,
   wsPort = 8081,
   oscTarget,
-  oscPackets,
   fps,
   mode,
   isPaused = false,
   speed = 1.0,
   onTogglePlayPause,
   onSetSpeed,
-  audioEnabled = false,
-  onToggleAudio,
   onExportCsv,
   onOpenFigmaModal,
   onOpenPayloadModal,
@@ -143,12 +136,9 @@ export const Header: React.FC<HeaderProps> = ({
         </Badge>
 
         {/* OSC UDP Status Badge */}
-        <Badge variant="cyan" className="hidden lg:flex items-center gap-1.5 py-1 px-2.5 font-mono text-[11px]">
+        <Badge variant="cyan" className="hidden lg:flex items-center gap-1.5 py-1 px-2.5 font-mono text-[11px]" title="Broadcasting Open Sound Control UDP packets to 127.0.0.1:9000">
           <Send className="w-3 h-3 text-primary" />
           <span>OSC :9000</span>
-          <span className="font-bold opacity-90">
-            {oscPackets > 9999 ? `${Math.floor(oscPackets / 1000)}k` : oscPackets}
-          </span>
         </Badge>
 
         {/* Engine FPS Badge */}
@@ -158,20 +148,6 @@ export const Header: React.FC<HeaderProps> = ({
         </Badge>
 
         <div className="h-4 w-[1px] bg-border mx-1 hidden sm:block" />
-
-        {/* Bio-Sonification Audio Synthesizer */}
-        {onToggleAudio && (
-          <Button
-            variant={audioEnabled ? 'telemetry' : 'outline'}
-            size="sm"
-            onClick={onToggleAudio}
-            className="gap-1.5 font-mono"
-            title={audioEnabled ? 'Mute Bio-Sonification' : 'Enable Auditory Bio-Sonification'}
-          >
-            {audioEnabled ? <Volume2 className="w-3.5 h-3.5 text-primary" /> : <VolumeX className="w-3.5 h-3.5 text-muted-foreground" />}
-            <span className="hidden md:inline">Audio</span>
-          </Button>
-        )}
 
         {/* Export Session CSV */}
         {onExportCsv && (

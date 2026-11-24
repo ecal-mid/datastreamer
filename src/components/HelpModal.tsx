@@ -47,8 +47,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
       item =>
         item.term.toLowerCase().includes(q) ||
         item.tag.toLowerCase().includes(q) ||
-        item.simpleExplanation.toLowerCase().includes(q) ||
-        item.metaphor.toLowerCase().includes(q)
+        item.simpleExplanation.toLowerCase().includes(q)
     );
   }, [searchQuery]);
 
@@ -68,7 +67,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                   <Badge variant="cyan" className="text-[10px] font-mono px-1.5 py-0">v1.2.0</Badge>
                 </DialogTitle>
                 <DialogDescription className="text-xs text-muted-foreground mt-0.5">
-                  Plain-English explanations of all biometric terms, calculations, and Figma prototyping tips.
+                  Clear explanations of all biometric terms, calculations, and Figma prototyping tips.
                 </DialogDescription>
               </div>
             </div>
@@ -147,13 +146,8 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                   </div>
 
                   <p className="text-xs text-foreground/90 leading-relaxed">
-                    <strong>In plain English:</strong> {item.simpleExplanation}
+                    {item.simpleExplanation}
                   </p>
-
-                  <div className="bg-secondary/40 rounded p-2 text-xs font-mono text-muted-foreground flex items-start gap-2 border border-border/40">
-                    <span className="text-primary font-bold">💡 Intuitive Metaphor:</span>
-                    <span className="text-foreground/80">{item.metaphor}</span>
-                  </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-[11px] font-mono">
                     <div className="bg-card/50 p-2 rounded border border-border/30">
@@ -405,136 +399,132 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
   );
 };
 
-// Plain-English glossary data
+// Clear biometric glossary data without metaphors or dense medical jargon
 const GLOSSARY_ITEMS = [
+  {
+    term: 'EDA & GSR (Electrodermal Activity / Galvanic Skin Response)',
+    icon: '⚡',
+    tag: 'Skin & Arousal',
+    figmaVar: null,
+    simpleExplanation: 'EDA and GSR are two names for the same physiological measurement: the electrical conductance of your skin. When you experience stress, emotional arousal, or mental effort, your involuntary nervous system activates microscopic sweat glands on your palms and fingers. Because sweat contains salt and water, skin conducts electricity more easily as moisture rises. It is one of the most reliable and direct markers of emotional arousal because it cannot be consciously controlled or faked.',
+    lowMeaning: '1 – 3 µS (Deep physical relaxation, calm resting state, or drowsiness; dry skin).',
+    highMeaning: '8 – 20+ µS (High emotional arousal, acute stress, excitement, or cognitive overload).'
+  },
+  {
+    term: 'Tonic EDA (Skin Conductance Level / SCL)',
+    icon: '💧',
+    tag: 'Skin & Arousal',
+    figmaVar: null,
+    simpleExplanation: 'The slow-moving baseline level of skin conductance. It rises or falls gradually over minutes or hours, reflecting your background state of alertness, sustained workload, ambient room temperature, or chronic tension.',
+    lowMeaning: '2 – 4 µS (Resting baseline, passive relaxation, or low vigilance).',
+    highMeaning: '8 – 15+ µS (Sustained mental strain, prolonged stress, or high vigilance).'
+  },
+  {
+    term: 'Phasic EDA (Skin Conductance Response / SCR)',
+    icon: '📈',
+    tag: 'Skin & Arousal',
+    figmaVar: null,
+    simpleExplanation: 'Fast, temporary peaks in skin conductance that appear 1 to 3 seconds after an immediate event—such as an unexpected alert, an interface error, a difficult question, or a sudden sound. These responses fade away over 5 to 10 seconds.',
+    lowMeaning: '0.0 µS (No sudden reactions; steady, calm state without startle).',
+    highMeaning: '0.5 – 2.0+ µS (Immediate emotional reaction, startle, or acute frustration).'
+  },
   {
     term: 'Heart Rate (BPM)',
     icon: '💓',
     tag: 'Heart & Rhythm',
     figmaVar: 'bio_bpm',
-    simpleExplanation: 'How many times your heart beats in one minute (Beats Per Minute).',
-    metaphor: 'The engine RPM of your car. Speeds up when climbing a hill; idles gently when parked.',
-    lowMeaning: '50 – 65 BPM (Deep sleep, profound meditation, athletic resting pulse).',
-    highMeaning: '90 – 130+ BPM (Physical exertion, panic, sudden shock, or mental overload).'
+    simpleExplanation: 'The number of times your heart contracts and pumps blood per minute (Beats Per Minute). Heart rate speeds up during physical movement, stress, or excitement, and slows down during rest, calm breathing, and recovery.',
+    lowMeaning: '50 – 65 BPM (Deep rest, calm meditation, or athletic resting pulse).',
+    highMeaning: '90 – 130+ BPM (Physical exertion, panic, sudden shock, or mental strain).'
   },
   {
-    term: 'Heart Rate Flexibility (RMSSD)',
-    icon: '📈',
+    term: 'Heart Rate Variability (RMSSD)',
+    icon: '📊',
     tag: 'Heart & Rhythm',
     figmaVar: 'bio_coherence',
-    simpleExplanation: 'Millisecond differences between individual heartbeats. A high number means your heart is nimble and relaxes quickly.',
-    metaphor: 'A shock absorber on a mountain bike. A flexible heart easily absorbs emotional bumps; a stiff heart is exhausted.',
-    lowMeaning: 'Below 25 ms (Exhaustion, chronic stress, emotional rigidity).',
-    highMeaning: 'Above 55 ms (High vitality, calm nervous system, quick recovery).'
+    simpleExplanation: 'The millisecond variation in time between consecutive heartbeats (calculated as the Root Mean Square of Successive Differences). A healthy heart naturally speeds up slightly during inhalation and slows down during exhalation. Higher variability indicates a flexible, resilient nervous system capable of recovering quickly from stress.',
+    lowMeaning: 'Below 25 ms (Physical exhaustion, chronic stress, or nervous system fatigue).',
+    highMeaning: 'Above 55 ms (High vitality, calm nervous system, and strong recovery capacity).'
   },
   {
     term: 'Cardiorespiratory Harmony (Coherence Score)',
     icon: '✨',
     tag: 'Heart & Breath',
     figmaVar: 'bio_coherence',
-    simpleExplanation: 'A score from 0.0 to 1.0 measuring how perfectly your breathing rhythm and heart rate oscillations match in unison.',
-    metaphor: 'Rowers in a boat pulling their oars in exact rhythm. Everything feels effortless.',
-    lowMeaning: '0.1 – 0.3 (Erratic, shallow, or anxious breathing disconnected from pulse).',
-    highMeaning: '0.8 – 1.0 (Deep resonant breathing, optimal focus, peaceful mind).'
+    simpleExplanation: 'A calculated score from 0.0 to 1.0 showing how synchronized your heart rate rhythm is with your breathing cycle. When breathing at a relaxed, steady rate of about 6 breaths per minute, heart rate oscillations lock in unison with respiration, maximizing coherence.',
+    lowMeaning: '0.1 – 0.3 (Irregular, shallow, or anxious breathing disconnected from pulse).',
+    highMeaning: '0.8 – 1.0 (Harmonic synchronization between breathing and pulse; deep calm).'
   },
   {
-    term: 'Breathing Phase & Wave (Respiration)',
+    term: 'Breathing Phase & Depth (Respiration)',
     icon: '🌬️',
     tag: 'Breathing',
     figmaVar: 'bio_respiration',
-    simpleExplanation: 'Whether you are currently inhaling (filling lungs) or exhaling (releasing breath), and how deep the breath is.',
-    metaphor: 'Ocean waves rolling onto the sand and pulling back out.',
-    lowMeaning: '0.0 (Lungs fully empty at the end of an exhalation).',
-    highMeaning: '1.0 (Lungs fully expanded at the peak of an inhalation).'
+    simpleExplanation: 'The continuous cycle of inhalation and exhalation, normalized between 0.0 and 1.0. 0.0 represents the end of an exhalation with empty lungs, while 1.0 represents the peak of an inhalation with full lungs.',
+    lowMeaning: '0.0 (End of exhalation, lungs empty).',
+    highMeaning: '1.0 (Peak of inhalation, lungs expanded).'
   },
   {
-    term: 'Skin Sweat Baseline (Tonic EDA / GSR)',
-    icon: '💧',
-    tag: 'Skin & Arousal',
-    figmaVar: null,
-    simpleExplanation: 'The background moisture and electric conductivity of your skin. It reflects your overall nervous system activation.',
-    metaphor: 'The baseline temperature on a thermostat.',
-    lowMeaning: '2 – 4 uS (Deep rest, drowsiness, sluggishness).',
-    highMeaning: '8 – 15+ uS (High alertness, nervousness, excitement, or tension).'
-  },
-  {
-    term: 'Sudden Emotional Spikes (Phasic EDA)',
-    icon: '⚡',
-    tag: 'Skin & Arousal',
-    figmaVar: null,
-    simpleExplanation: 'Quick, temporary surges of sweat caused by an immediate emotional reaction, surprise, or sudden mental effort.',
-    metaphor: 'The &quot;jump scare&quot; pulse when you unexpectedly hear a loud noise.',
-    lowMeaning: '0.0 uS (Calm, unstartled, steady concentration).',
-    highMeaning: '0.5 – 2.0+ uS (Immediate surprise, frustration, or startle reflex).'
-  },
-  {
-    term: 'Alpha Brainwave (8 – 12 Hz)',
+    term: 'Alpha Brainwaves (8 – 12 Hz)',
     icon: '🧘',
     tag: 'Brainwaves',
     figmaVar: 'bio_alpha',
-    simpleExplanation: 'The brainwave of calm alertness. You are awake and aware, but not stressed or overanalyzing.',
-    metaphor: 'Sitting in a quiet garden with eyes closed, sipping tea.',
-    lowMeaning: 'Below 0.25 (Stress, sensory overload, mental tension).',
-    highMeaning: 'Above 0.70 (Creative flow, calm mindfulness, mental ease).'
+    simpleExplanation: 'Electrical brain activity associated with calm, effortless alertness. Alpha waves increase when you are relaxed, mindful, or in a creative flow state without mental strain, especially with eyes relaxed.',
+    lowMeaning: 'Below 0.25 (Mental tension, active problem-solving, or sensory overload).',
+    highMeaning: 'Above 0.70 (Calm mindfulness, relaxed concentration, or mental ease).'
   },
   {
-    term: 'Beta Brainwave (15 – 30 Hz)',
+    term: 'Beta Brainwaves (15 – 30 Hz)',
     icon: '🧠',
     tag: 'Brainwaves',
     figmaVar: 'bio_beta',
-    simpleExplanation: 'The brainwave of active thinking, problem-solving, cognitive strain, and focus.',
-    metaphor: 'Solving a math puzzle on a whiteboard while a timer ticks down.',
-    lowMeaning: 'Below 0.20 (Daydreaming, meditation, drifting off).',
-    highMeaning: 'Above 0.75 (Heavy concentration, intense multitasking, anxiety).'
+    simpleExplanation: 'Fast brain rhythms produced during active analytical thinking, problem-solving, decision-making, and high cognitive workload.',
+    lowMeaning: 'Below 0.20 (Relaxed awareness, meditation, or daydreaming).',
+    highMeaning: 'Above 0.75 (Intense concentration, multitasking strain, or anxiety).'
   },
   {
-    term: 'Theta Brainwave (4 – 8 Hz)',
+    term: 'Theta Brainwaves (4 – 8 Hz)',
     icon: '🌙',
     tag: 'Brainwaves',
     figmaVar: null,
-    simpleExplanation: 'The twilight brainwave of daydreaming, intuition, and the blurry boundary right before falling asleep.',
-    metaphor: 'Floating on a cloud right before you drift off to sleep.',
+    simpleExplanation: 'Slow brain rhythms that occur during deep daydreaming, creative visualization, and the drowsy transition right before falling asleep (hypnagogia).',
     lowMeaning: 'Below 0.20 (Fully awake and alert).',
-    highMeaning: 'Above 0.65 (Drowsiness, hypnagogia, deep imagination).'
+    highMeaning: 'Above 0.65 (Drowsiness, twilight sleep transition, or deep reverie).'
   },
   {
-    term: 'Delta Brainwave (0.5 – 4 Hz)',
+    term: 'Delta Brainwaves (0.5 – 4 Hz)',
     icon: '💤',
     tag: 'Brainwaves',
     figmaVar: null,
-    simpleExplanation: 'The slowest brainwaves in the body, dominant during deep, dreamless restorative sleep.',
-    metaphor: 'The computer shutting down into power-saving hibernation mode.',
-    lowMeaning: 'Below 0.20 (Awake and active).',
-    highMeaning: 'Above 0.60 (Profound sleep or deep unconscious repair).'
+    simpleExplanation: 'The slowest brain oscillations, dominant during deep, dreamless restorative sleep. In healthy awake individuals, delta levels remain low.',
+    lowMeaning: 'Below 0.20 (Normal waking state).',
+    highMeaning: 'Above 0.60 (Profound sleep or deep physical recovery).'
   },
   {
     term: 'SMR Rhythm (12 – 15 Hz)',
     icon: '🐈',
     tag: 'Brainwaves',
     figmaVar: null,
-    simpleExplanation: 'Sensorimotor Rhythm: mental stillness paired with physical quietude. High readiness without tension.',
-    metaphor: 'A cat sitting completely motionless, calmly watching a bird.',
-    lowMeaning: 'Restless, fidgety, or distracted.',
-    highMeaning: 'Calm, focused readiness; still body, sharp mind.'
+    simpleExplanation: 'Sensorimotor Rhythm recorded over the motor cortex. It reflects physical stillness combined with attentive mental readiness—the ability to remain calm and focused without physical fidgeting.',
+    lowMeaning: 'Physical restlessness, fidgeting, or distraction.',
+    highMeaning: 'Calm physical stillness with focused attention.'
   },
   {
     term: 'Cognitive State Name',
     icon: '🏷️',
     tag: 'Affective State',
     figmaVar: 'bio_state',
-    simpleExplanation: 'A plain-English label describing what the user is experiencing (e.g., &quot;Deep Meditation / Flow&quot; or &quot;Cognitive Stress&quot;).',
-    metaphor: 'The mood badge on a profile card.',
-    lowMeaning: 'Used in Figma to swap component variants automatically.',
-    highMeaning: 'Eliminates mathematical guesswork in usability testing.'
+    simpleExplanation: 'A real-time label identifying the user\'s current physiological state (for example, "Baseline / Neutral", "Deep Meditation / Flow", or "Cognitive Stress"). In Figma prototypes, binding this string variable allows interfaces to automatically adapt components and screens.',
+    lowMeaning: 'Used in design prototypes to switch UI modes.',
+    highMeaning: 'Enables contextual, adaptive user experience testing.'
   },
   {
     term: 'Sensor Artifacts (Blink / Clench / Detach)',
     icon: '⚠️',
     tag: 'Noise Simulation',
     figmaVar: 'bio_artifact',
-    simpleExplanation: 'Real biosensors pick up electrical body noise. SimData simulates blinks, jaw clenches, and detached sensors.',
-    metaphor: 'Static on a radio when you drive through a tunnel.',
+    simpleExplanation: 'Real physiological sensors detect electrical noise from eye blinks, jaw clenching, and loose electrodes. SimData simulates these realistic distortions so designers can build and test error states, such as "Sensor Reconnection" notifications.',
     lowMeaning: 'Clean, noise-free biometric signal.',
-    highMeaning: 'Artifact detected! Perfect for triggering &quot;Adjust Sensor&quot; alerts in UI.'
+    highMeaning: 'Artifact detected; use to trigger warning banners or pause recording.'
   }
 ];
