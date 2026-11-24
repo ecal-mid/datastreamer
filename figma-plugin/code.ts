@@ -69,13 +69,15 @@ async function setupBioVariables() {
     return;
   }
 
-  const desiredVariables: Array<{ name: string; type: VariableResolvedDataType; initial: number | boolean }> = [
+  const desiredVariables: Array<{ name: string; type: VariableResolvedDataType; initial: number | boolean | string }> = [
     { name: 'bio_alpha', type: 'FLOAT', initial: 0.5 },
     { name: 'bio_beta', type: 'FLOAT', initial: 0.2 },
     { name: 'bio_coherence', type: 'FLOAT', initial: 0.5 },
     { name: 'bio_bpm', type: 'FLOAT', initial: 70.0 },
     { name: 'bio_respiration', type: 'FLOAT', initial: 0.5 },
     { name: 'bio_artifact', type: 'BOOLEAN', initial: false },
+    { name: 'bio_state', type: 'STRING', initial: 'Baseline / Neutral' },
+    { name: 'bio_stage', type: 'STRING', initial: 'Continuous' },
   ];
 
   let createdCount = 0;
@@ -83,18 +85,18 @@ async function setupBioVariables() {
     let variable = cache.variables[def.name];
     if (!variable) {
       variable = figma.variables.createVariable(def.name, cache.collection, def.type);
-      variable.setValueForMode(cache.defaultModeId, def.initial);
+      variable.setValueForMode(cache.defaultModeId, def.initial as any);
       cache.variables[def.name] = variable;
       createdCount++;
     } else {
       // Refresh default initial value
       try {
-        variable.setValueForMode(cache.defaultModeId, def.initial);
+        variable.setValueForMode(cache.defaultModeId, def.initial as any);
       } catch (e) {}
     }
   }
 
-  figma.notify(`SimData: Provisioned 6 bio variables in "BioData" collection!`);
+  figma.notify(`SimData: Provisioned 8 bio variables in "BioData" collection!`);
   figma.ui.postMessage({
     type: 'SETUP_SUCCESS',
     collectionName: 'BioData',
@@ -128,6 +130,12 @@ async function applyBioTelemetry(data: any) {
     }
     if (vars['bio_artifact'] && data.states?.artifact_flag !== undefined) {
       vars['bio_artifact'].setValueForMode(modeId, Boolean(data.states.artifact_flag));
+    }
+    if (vars['bio_state'] && data.states?.state_name !== undefined) {
+      vars['bio_state'].setValueForMode(modeId, String(data.states.state_name));
+    }
+    if (vars['bio_stage'] && data.states?.stage_name !== undefined) {
+      vars['bio_stage'].setValueForMode(modeId, String(data.states.stage_name));
     }
   } catch (err) {
     // Suppress individual frame write errors to prevent interrupting the stream

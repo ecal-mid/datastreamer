@@ -37,6 +37,8 @@ const INITIAL_TELEMETRY: SimDataTelemetry = {
     eda: { tonic: 5.0, phasic: 0.0 }
   },
   states: {
+    state_name: 'Baseline / Neutral',
+    stage_name: 'Generative Live',
     calm_index: 0.55,
     focus_index: 0.50,
     artifact_flag: false

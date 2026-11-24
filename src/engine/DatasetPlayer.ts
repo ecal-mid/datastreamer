@@ -20,7 +20,21 @@ export class DatasetPlayer {
       if (!Array.isArray(parsed) || parsed.length === 0) {
         return { success: false, frameCount: 0, error: 'JSON dataset must be a non-empty array of telemetry frames' };
       }
-      this.frames = parsed;
+      const lowerName = name.toLowerCase();
+      let defaultStateName = 'Dataset Playback';
+      if (lowerName.includes('meditation') || lowerName.includes('flow')) defaultStateName = 'Deep Meditation / Flow';
+      else if (lowerName.includes('stress') || lowerName.includes('overload')) defaultStateName = 'Cognitive Stress / Overload';
+      else if (lowerName.includes('coherence')) defaultStateName = 'Cardiorespiratory Coherence';
+      else if (lowerName.includes('drowsiness') || lowerName.includes('hypnagogia')) defaultStateName = 'Drowsiness / Hypnagogia';
+
+      this.frames = parsed.map(f => ({
+        ...f,
+        states: {
+          ...f.states,
+          state_name: f.states?.state_name || defaultStateName,
+          stage_name: f.states?.stage_name || name,
+        }
+      }));
       this.state.datasetName = name;
       this.state.totalFrames = parsed.length;
       this.state.currentIndex = 0;
@@ -86,6 +100,19 @@ export class DatasetPlayer {
         const artifactRaw = row['artifact'] || row['artifact_flag'] || row['noise'] || '0';
         const isArtifact = artifactRaw === '1' || artifactRaw === 'true';
 
+        const rowState = row['state_name'] || row['condition'] || row['label'] || '';
+        let inferredState = rowState;
+        if (!inferredState) {
+          const lowerName = name.toLowerCase();
+          if (lowerName.includes('meditation') || lowerName.includes('flow')) inferredState = 'Deep Meditation / Flow';
+          else if (lowerName.includes('stress') || lowerName.includes('overload')) inferredState = 'Cognitive Stress / Overload';
+          else if (lowerName.includes('coherence')) inferredState = 'Cardiorespiratory Coherence';
+          else if (lowerName.includes('drowsiness') || lowerName.includes('hypnagogia')) inferredState = 'Drowsiness / Hypnagogia';
+          else if (lowerName.includes('muse')) inferredState = 'Muse EEG Session';
+          else if (lowerName.includes('wesad')) inferredState = 'WESAD Biometric Session';
+          else inferredState = 'Dataset Playback';
+        }
+
         const frame: SimBioTelemetry = {
           timestamp: parseInt(row['timestamp'], 10) || (Date.now() + i * 33),
           mode: 'playback',
@@ -96,6 +123,8 @@ export class DatasetPlayer {
             eda: { tonic: tonicEda, phasic: phasicEda }
           },
           states: {
+            state_name: inferredState,
+            stage_name: name,
             calm_index: calmIndex,
             focus_index: focusIndex,
             artifact_flag: isArtifact

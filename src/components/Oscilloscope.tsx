@@ -240,7 +240,7 @@ export const Oscilloscope: React.FC<OscilloscopeProps> = ({ telemetry, isPaused 
   }, []);
 
   const { hrv, respiration, eda, eeg } = telemetry.biometrics;
-  const { calm_index, focus_index, artifact_flag } = telemetry.states;
+  const { calm_index, focus_index, artifact_flag, state_name } = telemetry.states;
 
   // Determine dominant brain rhythm name
   const dominantRhythm =
@@ -411,8 +411,11 @@ export const Oscilloscope: React.FC<OscilloscopeProps> = ({ telemetry, isPaused 
 
         {/* Calm & Focus Dual Indices Card */}
         <Card className="bg-card/60 border-border p-2.5 flex flex-col justify-between">
-          <div className="text-xs font-mono uppercase text-muted-foreground mb-1.5">
-            Cognitive Indices
+          <div className="flex items-center justify-between text-xs font-mono uppercase text-muted-foreground mb-1.5 gap-1">
+            <span>Cognitive State</span>
+            <Badge variant="cyan" className="text-[9px] px-1.5 py-0 font-normal truncate max-w-[130px]" title={state_name || 'Baseline'}>
+              {state_name || 'Baseline'}
+            </Badge>
           </div>
           <div className="space-y-2">
             <div>

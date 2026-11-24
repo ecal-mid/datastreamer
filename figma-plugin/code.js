@@ -75,6 +75,8 @@ function setupBioVariables() {
             { name: 'bio_bpm', type: 'FLOAT', initial: 70.0 },
             { name: 'bio_respiration', type: 'FLOAT', initial: 0.5 },
             { name: 'bio_artifact', type: 'BOOLEAN', initial: false },
+            { name: 'bio_state', type: 'STRING', initial: 'Baseline / Neutral' },
+            { name: 'bio_stage', type: 'STRING', initial: 'Continuous' },
         ];
         let createdCount = 0;
         for (const def of desiredVariables) {
@@ -93,7 +95,7 @@ function setupBioVariables() {
                 catch (e) { }
             }
         }
-        figma.notify(`SimData: Provisioned 6 bio variables in "BioData" collection!`);
+        figma.notify(`SimData: Provisioned 8 bio variables in "BioData" collection!`);
         figma.ui.postMessage({
             type: 'SETUP_SUCCESS',
             collectionName: 'BioData',
@@ -104,7 +106,7 @@ function setupBioVariables() {
 }
 function applyBioTelemetry(data) {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o;
         const cache = yield getOrInitBioCollection();
         if (!cache || !cache.collection)
             return;
@@ -128,6 +130,12 @@ function applyBioTelemetry(data) {
             }
             if (vars['bio_artifact'] && ((_l = data.states) === null || _l === void 0 ? void 0 : _l.artifact_flag) !== undefined) {
                 vars['bio_artifact'].setValueForMode(modeId, Boolean(data.states.artifact_flag));
+            }
+            if (vars['bio_state'] && ((_m = data.states) === null || _m === void 0 ? void 0 : _m.state_name) !== undefined) {
+                vars['bio_state'].setValueForMode(modeId, String(data.states.state_name));
+            }
+            if (vars['bio_stage'] && ((_o = data.states) === null || _o === void 0 ? void 0 : _o.stage_name) !== undefined) {
+                vars['bio_stage'].setValueForMode(modeId, String(data.states.stage_name));
             }
         }
         catch (err) {

@@ -26,6 +26,8 @@ export interface EdaData {
 }
 
 export interface StatesData {
+  state_name: string;     // e.g. "Baseline / Neutral", "Deep Meditation / Flow", "Cognitive Stress"
+  stage_name?: string;    // e.g. "Stage 1: Baseline (30s)", "Stage 2: Stress", or "Continuous"
   calm_index: number;     // 0.0 - 1.0
   focus_index: number;    // 0.0 - 1.0
   artifact_flag: boolean; // boolean

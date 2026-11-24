@@ -45,6 +45,8 @@ assert(t1.states, 'states field required');
 assert(typeof t1.states.calm_index === 'number', 'calm_index must be a number');
 assert(typeof t1.states.focus_index === 'number', 'focus_index must be a number');
 assert(typeof t1.states.artifact_flag === 'boolean', 'artifact_flag must be boolean');
+assert(typeof t1.states.state_name === 'string' && t1.states.state_name.length > 0, 'state_name must be non-empty string');
+assert(typeof t1.states.stage_name === 'string' && t1.states.stage_name.length > 0, 'stage_name must be non-empty string');
 console.log('✓ Test 1 Passed: Telemetry schema strictly compliant.\n');
 
 // Test 2: RSA Heart Coupling (Accelerates during inhale, decelerates during exhale)
@@ -108,25 +110,26 @@ console.log('✓ Test 4 Passed: Artifact injection and recovery verified.\n');
 // Test 5: OSC 1.0 Packet Binary Encoding
 console.log('Test 5: OSC Binary Encoding Multiples of 4 Bytes');
 const testAddresses = [
-  '/bio/eeg/alpha',
-  '/bio/eeg/beta',
-  '/bio/eeg/theta',
-  '/bio/eeg/smr',
-  '/bio/hrv/bpm',
-  '/bio/hrv/coherence',
-  '/bio/respiration',
-  '/bio/eda/phasic',
-  '/bio/state/calm',
-  '/bio/artifact'
+  { addr: '/bio/eeg/alpha', type: 'f', val: 0.5 },
+  { addr: '/bio/eeg/beta', type: 'f', val: 0.5 },
+  { addr: '/bio/eeg/theta', type: 'f', val: 0.5 },
+  { addr: '/bio/eeg/smr', type: 'f', val: 0.5 },
+  { addr: '/bio/hrv/bpm', type: 'f', val: 70.0 },
+  { addr: '/bio/hrv/coherence', type: 'f', val: 0.5 },
+  { addr: '/bio/respiration', type: 'f', val: 0.0 },
+  { addr: '/bio/eda/phasic', type: 'f', val: 0.2 },
+  { addr: '/bio/state/calm', type: 'f', val: 0.5 },
+  { addr: '/bio/state/name', type: 's', val: 'Deep Meditation / Flow' },
+  { addr: '/bio/stage/name', type: 's', val: 'Stage 1: Baseline' },
+  { addr: '/bio/artifact', type: 'i', val: 0 }
 ];
 
-for (const addr of testAddresses) {
-  const isArtifact = addr === '/bio/artifact';
-  const buf = encodeOscMessage(addr, [{ type: isArtifact ? 'i' : 'f', value: 0.5 }]);
-  assert.strictEqual(buf.length % 4, 0, `OSC packet ${addr} must be padded to a multiple of 4 bytes`);
-  assert(buf.length >= 16, `OSC packet ${addr} minimum header length`);
+for (const item of testAddresses) {
+  const buf = encodeOscMessage(item.addr, [{ type: item.type, value: item.val }]);
+  assert.strictEqual(buf.length % 4, 0, `OSC packet ${item.addr} must be padded to a multiple of 4 bytes`);
+  assert(buf.length >= 16, `OSC packet ${item.addr} minimum header length`);
 }
-console.log('✓ Test 5 Passed: All 10 OSC addresses match 4-byte boundary requirement.\n');
+console.log('✓ Test 5 Passed: All 12 OSC addresses match 4-byte boundary requirement.\n');
 
 // Test 6: Pre-bundled Dataset Files Integrity
 console.log('Test 6: Pre-bundled Dataset Recordings Verification');
@@ -159,6 +162,9 @@ assert(fs.existsSync(path.join(figmaDir, 'code.js')), 'code.js compiled bundle m
 const manifest = JSON.parse(fs.readFileSync(path.join(figmaDir, 'manifest.json'), 'utf8'));
 assert.strictEqual(manifest.main, 'code.js', 'manifest.main must point to code.js');
 assert.strictEqual(manifest.ui, 'ui.html', 'manifest.ui must point to ui.html');
+const codeJs = fs.readFileSync(path.join(figmaDir, 'code.js'), 'utf8');
+assert(codeJs.includes('bio_state'), 'code.js must define bio_state variable');
+assert(codeJs.includes('bio_stage'), 'code.js must define bio_stage variable');
 console.log('✓ Test 7 Passed: Figma plugin bundle structure verified.\n');
 
 // Test 8: Main Streamer Play/Pause Transport Freeze

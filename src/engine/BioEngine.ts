@@ -95,6 +95,7 @@ export class BioEngine {
   // Active parameter values (interpolated smoothly)
   private currentParams: PresetConfig;
   private targetParams: PresetConfig;
+  private currentPresetName: string = 'Baseline / Neutral';
   private interpolationDuration: number = 3.0; // 3 seconds
   private interpolationElapsed: number = 3.0;
 
@@ -152,8 +153,31 @@ export class BioEngine {
     if (!target) return;
     this.mode = 'preset';
     this.targetParams = { ...target };
+    this.currentPresetName = target.name;
     this.interpolationDuration = 3.0; // 3 seconds
     this.interpolationElapsed = 0.0;
+  }
+
+  public deriveStateName(eeg?: { alpha: number; beta: number; theta: number }, hrv?: { coherence: number }): string {
+    if (this.mode === 'preset') {
+      return this.currentPresetName || this.targetParams?.name || 'Baseline / Neutral';
+    }
+    const beta = eeg?.beta ?? 0.3;
+    const alpha = eeg?.alpha ?? 0.5;
+    const theta = eeg?.theta ?? 0.3;
+    const coherence = hrv?.coherence ?? 0.5;
+
+    if (beta > 0.60 && coherence < 0.40) return 'Cognitive Stress / Overload';
+    if (alpha > 0.65 && coherence > 0.65) return 'Deep Meditation / Flow';
+    if (theta > 0.60 && beta < 0.25) return 'Drowsiness / Hypnagogia';
+    if (coherence > 0.75) return 'Cardiorespiratory Coherence';
+    if (beta > 0.50) return 'Active Focus / Processing';
+    return 'Baseline / Neutral';
+  }
+
+  public deriveStageName(): string {
+    if (this.mode === 'preset') return `Preset: ${this.currentPresetName}`;
+    return 'Generative Live';
   }
 
   public setOverrides(overrides: Partial<ManualOverrides>) {
@@ -361,6 +385,8 @@ export class BioEngine {
         eda,
       },
       states: {
+        state_name: this.deriveStateName(eeg, { coherence }),
+        stage_name: this.deriveStageName(),
         calm_index: calmIndex,
         focus_index: focusIndex,
         artifact_flag: artifactFlag,

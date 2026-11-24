@@ -212,6 +212,17 @@
     Setup Bio Variables
   </button>
 
+  <div class="state-card" id="stateCard" style="background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+      <div class="card-label" style="margin-bottom: 2px;">Active State (bio_state)</div>
+      <div id="valState" style="font-size: 11px; font-weight: 700; color: #38bdf8;">Baseline / Neutral</div>
+    </div>
+    <div style="text-align: right;">
+      <div class="card-label" style="margin-bottom: 2px;">Stage (bio_stage)</div>
+      <div id="valStage" style="font-size: 10px; font-family: monospace; color: var(--muted-foreground);">Continuous</div>
+    </div>
+  </div>
+
   <div class="telemetry-grid">
     <div class="telemetry-card">
       <div class="card-label">Heart Rate (BPM)</div>
@@ -241,7 +252,7 @@
 
   <div class="info-footer">
     <strong>Binding Guide:</strong><br>
-    Click <em>Setup Bio Variables</em> to generate the <span class="variable-tag">BioData</span> collection. Then bind <span class="variable-tag">bio_bpm</span>, <span class="variable-tag">bio_respiration</span>, <span class="variable-tag">bio_coherence</span>, <span class="variable-tag">bio_alpha</span>, or <span class="variable-tag">bio_artifact</span> directly to opacity, corner radius, rotation, or auto-layout in Figma!
+    Click <em>Setup Bio Variables</em> to generate the <span class="variable-tag">BioData</span> collection. Then bind <span class="variable-tag">bio_state</span> and <span class="variable-tag">bio_stage</span> to text layers & component variants, and <span class="variable-tag">bio_bpm</span>, <span class="variable-tag">bio_respiration</span>, <span class="variable-tag">bio_coherence</span>, <span class="variable-tag">bio_alpha</span>, or <span class="variable-tag">bio_artifact</span> directly to opacity, corner radius, rotation, or auto-layout in Figma!
   </div>
 
   <script>
@@ -257,6 +268,8 @@
     const statusDot = document.getElementById('statusDot');
     const statusText = document.getElementById('statusText');
     const artifactAlert = document.getElementById('artifactAlert');
+    const valState = document.getElementById('valState');
+    const valStage = document.getElementById('valStage');
     const valBpm = document.getElementById('valBpm');
     const valCoherence = document.getElementById('valCoherence');
     const valResp = document.getElementById('valResp');
@@ -289,7 +302,11 @@
             const alpha = data.biometrics.eeg?.alpha;
             const beta = data.biometrics.eeg?.beta;
             const isArtifact = data.states?.artifact_flag;
+            const stateName = data.states?.state_name;
+            const stageName = data.states?.stage_name;
 
+            if (stateName && valState) valState.textContent = stateName;
+            if (stageName && valStage) valStage.textContent = stageName;
             if (bpm !== undefined) valBpm.textContent = bpm.toFixed(1);
             if (coh !== undefined) valCoherence.textContent = coh.toFixed(2);
             if (resp !== undefined) valResp.textContent = `${resp.toFixed(2)} (${phase === 'inhale' ? 'IN' : 'EX'})`;

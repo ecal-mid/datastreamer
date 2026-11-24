@@ -225,6 +225,8 @@ Broadcasts at **30 Hz** as stringified JSON:
     }
   },
   "states": {
+    "state_name": "Deep Meditation / Flow",
+    "stage_name": "Generative Live",
     "calm_index": 0.78,
     "focus_index": 0.65,
     "artifact_flag": false
@@ -243,6 +245,8 @@ Broadcasts matching semantic addresses:
 * `/bio/respiration` `[float -1.0 to 1.0]`
 * `/bio/eda/phasic` `[float]`
 * `/bio/state/calm` `[float 0.0 - 1.0]`
+* `/bio/state/name` `[string]` (e.g. `"Deep Meditation / Flow"`)
+* `/bio/stage/name` `[string]` (e.g. `"Stage 1: Baseline"`)
 * `/bio/artifact` `[int 0 or 1]`
 
 ---
@@ -267,6 +271,8 @@ The companion Figma plugin binds live biometric telemetry directly into native F
 | `bio_bpm` | `FLOAT` | Instantaneous heart rate ($45 - 130\text{ BPM}$) |
 | `bio_respiration` | `FLOAT` | Normalized respiration amplitude ($0.0 - 1.0$) |
 | `bio_artifact` | `BOOLEAN` | Artifact trigger indicator (`true` / `false`) |
+| `bio_state` | `STRING` | Active affective/cognitive state name (e.g. `"Deep Meditation / Flow"`) |
+| `bio_stage` | `STRING` | Scenario stage title or protocol step (e.g. `"Stage 2: Stress Challenge"`) |
 
 > **Throttling Engine:** The plugin receives WebSocket telemetry at 30 Hz and throttles updates to Figma's sandbox to **10 Hz (every 100ms)** to ensure buttery-smooth performance with zero canvas lag.
 

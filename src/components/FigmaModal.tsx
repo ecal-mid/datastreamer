@@ -87,7 +87,7 @@ export const FigmaModal: React.FC<FigmaModalProps> = ({ isOpen, onClose }) => {
           </div>
 
           <Card className="bg-secondary/40 p-3 border-border/80 text-[11px] space-y-1.5">
-            <div className="font-semibold text-foreground">Auto-Provisioned in &quot;BioData&quot; Collection:</div>
+            <div className="font-semibold text-foreground">Auto-Provisioned in &quot;BioData&quot; Collection (8 Variables):</div>
             <div className="grid grid-cols-2 gap-1.5 font-mono text-muted-foreground">
               <div><strong className="text-cyan-400">bio_alpha</strong>: 0.0 - 1.0 (Float)</div>
               <div><strong className="text-amber-400">bio_beta</strong>: 0.0 - 1.0 (Float)</div>
@@ -95,6 +95,8 @@ export const FigmaModal: React.FC<FigmaModalProps> = ({ isOpen, onClose }) => {
               <div><strong className="text-red-400">bio_bpm</strong>: 45 - 130 (Float)</div>
               <div><strong className="text-cyan-400">bio_respiration</strong>: 0.0 - 1.0 (Float)</div>
               <div><strong className="text-red-400">bio_artifact</strong>: Boolean Flag</div>
+              <div><strong className="text-purple-400">bio_state</strong>: Cognitive State (String)</div>
+              <div><strong className="text-cyan-300">bio_stage</strong>: Scenario Stage (String)</div>
             </div>
           </Card>
         </div>

@@ -167,6 +167,7 @@ class SimulationEngine {
     this.isPaused = false;
     this.speed = 1.0;
     this.lastFrame = null;
+    this.currentPresetName = 'Baseline / Neutral';
 
     // Dataset Playback State
     this.datasetFrames = [];
@@ -187,6 +188,66 @@ class SimulationEngine {
 
   setMode(mode) {
     this.mode = mode;
+  }
+
+  classifyBiometricState(eeg, hrv) {
+    const beta = eeg?.beta ?? 0.3;
+    const alpha = eeg?.alpha ?? 0.5;
+    const theta = eeg?.theta ?? 0.3;
+    const coherence = hrv?.coherence ?? 0.5;
+
+    if (beta > 0.60 && coherence < 0.40) return 'Cognitive Stress / Overload';
+    if (alpha > 0.65 && coherence > 0.65) return 'Deep Meditation / Flow';
+    if (theta > 0.60 && beta < 0.25) return 'Drowsiness / Hypnagogia';
+    if (coherence > 0.75) return 'Cardiorespiratory Coherence';
+    if (beta > 0.50) return 'Active Focus / Processing';
+    return 'Baseline / Neutral';
+  }
+
+  deriveStateName(telemetry) {
+    if (this.mode === 'preset') {
+      return this.currentPresetName || this.targetParams?.name || 'Baseline / Neutral';
+    }
+    if (this.mode === 'playlist') {
+      const step = this.playlist?.steps?.[this.playlistStepIndex];
+      if (step?.name) {
+        return step.name;
+      }
+      if (step?.recordingFile) {
+        const lower = step.recordingFile.toLowerCase();
+        if (lower.includes('meditation') || lower.includes('flow')) return 'Deep Meditation / Flow';
+        if (lower.includes('stress') || lower.includes('overload')) return 'Cognitive Stress / Overload';
+        if (lower.includes('coherence')) return 'Cardiorespiratory Coherence';
+        if (lower.includes('drowsiness') || lower.includes('hypnagogia')) return 'Drowsiness / Hypnagogia';
+      }
+    }
+    if (this.mode === 'playback') {
+      const name = this.datasetName || '';
+      const lower = name.toLowerCase();
+      if (lower.includes('meditation') || lower.includes('flow')) return 'Deep Meditation / Flow';
+      if (lower.includes('stress') || lower.includes('overload')) return 'Cognitive Stress / Overload';
+      if (lower.includes('coherence')) return 'Cardiorespiratory Coherence';
+      if (lower.includes('drowsiness') || lower.includes('hypnagogia')) return 'Drowsiness / Hypnagogia';
+      if (lower.includes('muse')) return 'Muse EEG Session';
+      if (lower.includes('wesad')) return 'WESAD Biometric Session';
+    }
+    return this.classifyBiometricState(telemetry?.biometrics?.eeg, telemetry?.biometrics?.hrv);
+  }
+
+  deriveStageName(telemetry) {
+    if (this.mode === 'playlist') {
+      const step = this.playlist?.steps?.[this.playlistStepIndex];
+      const stepNum = this.playlistStepIndex + 1;
+      const totalSteps = this.playlist?.steps?.length || 1;
+      return step?.name ? `Stage ${stepNum}/${totalSteps}: ${step.name}` : `Stage ${stepNum}/${totalSteps}`;
+    }
+    if (this.mode === 'playback') {
+      return this.datasetName ? `Playback: ${this.datasetName}` : 'Dataset Playback';
+    }
+    if (this.mode === 'preset') {
+      return `Preset: ${this.currentPresetName || 'Baseline'}`;
+    }
+    return 'Generative Live';
   }
 
   loadDataset(name, contentOrParsed) {
@@ -264,6 +325,7 @@ class SimulationEngine {
       const focusIndex = getNum(row, ['focus_index', 'focus', 'attention', 'engagement'], 0.5);
       const artifactRaw = row['artifact'] || row['artifact_flag'] || row['noise'] || '0';
       const isArtifact = artifactRaw === '1' || artifactRaw === 'true';
+      const rowState = row['state_name'] || row['condition'] || row['label'] || '';
 
       frames.push({
         timestamp: Date.now() + i * 33,
@@ -275,6 +337,8 @@ class SimulationEngine {
           eda: { tonic: tonicEda, phasic: phasicEda },
         },
         states: {
+          state_name: rowState || this.classifyBiometricState({ alpha, beta, theta }, { coherence }),
+          stage_name: this.datasetName || 'Dataset Playback',
           calm_index: calmIndex,
           focus_index: focusIndex,
           artifact_flag: isArtifact,
@@ -317,6 +381,8 @@ class SimulationEngine {
         }
       },
       states: {
+        state_name: t < 0.5 ? (frameA.states?.state_name || 'Stage Transition') : (frameB.states?.state_name || 'Stage Transition'),
+        stage_name: t < 0.5 ? (frameA.states?.stage_name || 'Transition') : (frameB.states?.stage_name || 'Transition'),
         calm_index: Number(lerp(frameA.states?.calm_index, frameB.states?.calm_index).toFixed(2)),
         focus_index: Number(lerp(frameA.states?.focus_index, frameB.states?.focus_index).toFixed(2)),
         artifact_flag: t > 0.5 ? Boolean(frameB.states?.artifact_flag) : Boolean(frameA.states?.artifact_flag),
@@ -413,6 +479,7 @@ class SimulationEngine {
     if (!target) return;
     this.mode = 'preset';
     this.targetParams = { ...target };
+    this.currentPresetName = target.name;
     this.interpolationDuration = 3.0; // 3 second transition
     this.interpolationElapsed = 0.0;
   }
@@ -469,6 +536,14 @@ class SimulationEngine {
           ...raw,
           mode: 'playback',
           timestamp: Date.now(),
+          states: {
+            ...raw.states,
+            state_name: raw.states?.state_name || this.deriveStateName(raw),
+            stage_name: raw.states?.stage_name || this.deriveStageName(raw),
+            calm_index: raw.states?.calm_index ?? 0.5,
+            focus_index: raw.states?.focus_index ?? 0.5,
+            artifact_flag: Boolean(raw.states?.artifact_flag),
+          }
         };
         this.lastFrame = frame;
         return frame;
@@ -532,6 +607,11 @@ class SimulationEngine {
       }
 
       if (frame) {
+        frame.states = {
+          ...frame.states,
+          state_name: frame.states?.state_name || this.deriveStateName(frame),
+          stage_name: this.deriveStageName(frame),
+        };
         const totalPlaylistSeconds = this.playlist.steps.reduce((acc, s) => acc + (s.durationSeconds || 30), 0);
         frame.playlist_state = {
           isActive: true,
@@ -678,6 +758,8 @@ class SimulationEngine {
         eda,
       },
       states: {
+        state_name: this.deriveStateName({ biometrics: { eeg, hrv: { bpm, rmssd, coherence } } }),
+        stage_name: this.deriveStageName(),
         calm_index: calmIndex,
         focus_index: focusIndex,
         artifact_flag: artifactFlag,
@@ -1113,6 +1195,8 @@ function startSimDataServer(options = {}) {
         }
       },
       states: {
+        state_name: telemetry.states?.state_name || engine.deriveStateName(telemetry),
+        stage_name: telemetry.states?.stage_name || engine.deriveStageName(telemetry),
         calm_index: telemetry.states?.calm_index ?? 0.5,
         focus_index: telemetry.states?.focus_index ?? 0.5,
         artifact_flag: Boolean(telemetry.states?.artifact_flag),
@@ -1140,6 +1224,8 @@ function startSimDataServer(options = {}) {
       encodeOscMessage('/bio/respiration', [{ type: 'f', value: respSin }]),
       encodeOscMessage('/bio/eda/phasic', [{ type: 'f', value: jsonPayload.biometrics.eda.phasic }]),
       encodeOscMessage('/bio/state/calm', [{ type: 'f', value: jsonPayload.states.calm_index }]),
+      encodeOscMessage('/bio/state/name', [{ type: 's', value: jsonPayload.states.state_name }]),
+      encodeOscMessage('/bio/stage/name', [{ type: 's', value: jsonPayload.states.stage_name }]),
       encodeOscMessage('/bio/artifact', [{ type: 'i', value: jsonPayload.states.artifact_flag ? 1 : 0 }]),
     ];
 

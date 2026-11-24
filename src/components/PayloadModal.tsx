@@ -41,6 +41,8 @@ export const PayloadModal: React.FC<PayloadModalProps> = ({ isOpen, onClose, tel
     { address: '/bio/respiration', type: 'float', val: ((telemetry.biometrics.respiration.value * 2) - 1).toFixed(2), desc: 'Normalized -1.0 to 1.0' },
     { address: '/bio/eda/phasic', type: 'float', val: telemetry.biometrics.eda.phasic.toFixed(2), desc: 'Phasic burst amplitude' },
     { address: '/bio/state/calm', type: 'float', val: telemetry.states.calm_index.toFixed(2), desc: 'Calm index (0.0 - 1.0)' },
+    { address: '/bio/state/name', type: 'string', val: telemetry.states.state_name || 'Baseline / Neutral', desc: 'Active cognitive / affective state' },
+    { address: '/bio/stage/name', type: 'string', val: telemetry.states.stage_name || 'Continuous', desc: 'Protocol / scenario stage title' },
     { address: '/bio/artifact', type: 'int', val: telemetry.states.artifact_flag ? '1' : '0', desc: 'Artifact detection flag' },
   ];
 
