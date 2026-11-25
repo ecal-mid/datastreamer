@@ -40,11 +40,16 @@ Built with **shadcn/ui** and Tailwind CSS, SimData generates and broadcasts phys
 
 ---
 
-## Download & Installation (macOS)
+## Download & Installation
 
-Pre-built binaries for Apple Silicon Macs are available on [GitHub Releases](https://github.com/ecal-mid/datastreamer/releases):
+Pre-built binaries for Windows and macOS are available on [GitHub Releases](https://github.com/ecal-mid/datastreamer/releases) and in the local [`release/`](release/) directory:
 
-1. Download **`SimData-1.2.0-arm64.dmg`** and drag **SimData.app** into your `/Applications` folder.
+### Windows (x64 & ARM64)
+- **Installer:** Download **`SimData Setup 1.2.0.exe`** and run the setup wizard to install with desktop shortcuts and uninstaller.
+- **Portable:** Download **`SimData 1.2.0.exe`** to run immediately without installation.
+
+### macOS (Apple Silicon)
+1. Download **`SimData-1.2.0-arm64.dmg`** and drag **SimData.app** into your `/Applications` folder (or extract **`SimData-1.2.0-arm64-mac.zip`**).
 2. **First Launch (macOS Gatekeeper Note):**  
    If macOS displays *"SimData is damaged and can't be opened"*, open **Terminal** and run:
    ```bash

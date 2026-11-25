@@ -1,62 +1,111 @@
 # SimData v1.2.0 Release Notes
 
-**Release Date:** November 24, 2026  
-**Build:** `v1.2.0` (macOS Apple Silicon & Universal Web)  
-**Binary Downloads:** [SimData-1.2.0-arm64.dmg](file:///Users/abookm1/Documents/GitHub/datastreamer/release/SimData-1.2.0-arm64.dmg) • [SimData-1.2.0-arm64-mac.zip](file:///Users/abookm1/Documents/GitHub/datastreamer/release/SimData-1.2.0-arm64-mac.zip) • [simdata-figma-plugin.zip](file:///Users/abookm1/Documents/GitHub/datastreamer/figma-plugin/simdata-figma-plugin.zip)
+**Release Date:** November 25, 2026  
+**Build:** `v1.2.0` (Windows x64 & ARM64, macOS Apple Silicon, Universal Web)  
+**Binary Downloads:**
+- **Windows:** [SimData Setup 1.2.0.exe](file:///Users/abookm1/Documents/GitHub/datastreamer/release/SimData%20Setup%201.2.0.exe) (Installer) • [SimData 1.2.0.exe](file:///Users/abookm1/Documents/GitHub/datastreamer/release/SimData%201.2.0.exe) (Portable)
+- **macOS:** [SimData-1.2.0-arm64.dmg](file:///Users/abookm1/Documents/GitHub/datastreamer/release/SimData-1.2.0-arm64.dmg) (Installer) • [SimData-1.2.0-arm64-mac.zip](file:///Users/abookm1/Documents/GitHub/datastreamer/release/SimData-1.2.0-arm64-mac.zip) (Portable)
+- **Figma Plugin:** [simdata-figma-plugin.zip](file:///Users/abookm1/Documents/GitHub/datastreamer/figma-plugin/simdata-figma-plugin.zip)
 
 ---
 
 ## 🌟 Highlights
 
-SimData **v1.2.0** introduces **Scenario Playlists & Biometric Sequencing Engine**, allowing interaction designers, researchers, and creative technologists to chain multiple biometric recordings into multi-stage state transitions (e.g., *Baseline 30s → Stress 45s → Recovery 60s*). With smooth physiological cubic crossfades, a dedicated visual Scenario Studio, portable `.playlist.json` export/import, and native persistence in macOS Application Support, prototyping adaptive, state-dependent interfaces in Figma, TouchDesigner, or Max/MSP has never been easier.
+SimData **v1.2.0** is a major release introducing:
+1. **Official Windows Builds:** Full native installer (`NSIS`) and zero-install portable executable for standard Windows 64-bit (Intel/AMD) and ARM64 machines.
+2. **Scenario Playlists & Sequencing Engine:** Chain multiple biometric states into continuous multi-stage timelines with smooth cubic crossfades and live transport scrubbing.
+3. **Interactive Biometrics & Interaction Guide (In-App Help):** A comprehensive 4-tab interactive reference with clear, non-jargon explanations, search filtering, physiological coupling rules, state archetypes, and native Figma prototyping recipes.
+4. **Physiological Sensor Artifacts & Acute Stress Testing:** Realistic simulation of EOG eye blinks, EMG jaw clenching, and sensor detachments via `bio_artifact` alongside dedicated acute startle recordings to test error-resilient biofeedback UX.
+5. **Alternative Compact Oscilloscope View:** An ultra-compact 80px high-density mini-trace canvas that keeps real-time telemetry visible without requiring scrolling while working with playlists or datasets.
+6. **Optimized Layout & Window Ergonomics:** Refined header layout, persistent OSC badge across all breakpoints, wider responsive stage name inputs, and a calibrated default window size (1200x800).
 
 ---
 
 ## 🚀 What's New
 
-### 1. Scenario Playlists & Sequencing Engine
+### 1. Windows Desktop Distribution (x64 & ARM64)
+- **Full Windows NSIS Installer:** Standard one-click installer (`SimData Setup 1.2.0.exe`) with desktop shortcuts, Start Menu integration, and clean uninstaller support.
+- **Standalone Portable Executable:** Zero-install single file (`SimData 1.2.0.exe`) that runs immediately from flash drives or shared folders without requiring administrative permissions.
+- **Multi-Architecture Support:** Built for both standard 64-bit Windows PCs (Intel/AMD `x64`) and ARM64 Windows laptops.
+- **Zero-Config Protocol Stack:** Auto-provisions background WebSocket (`ws://127.0.0.1:8081`) and OSC UDP broadcast (`127.0.0.1:9000`) on launch.
+
+### 2. In-App Biometrics & Interaction Guide (Help Modal)
+- **Tab 1 — Terms & Dictionary:** Clear, accessible explanations of all biometric terms without dense medical jargon or confusing metaphors:
+  - Electrodermal Activity: **EDA / GSR**, **Tonic EDA** (SCL baseline), **Phasic EDA** (SCR reaction spikes).
+  - Cardiac & Autonomic: **Heart Rate (BPM)**, **Heart Rate Variability (RMSSD)**, **Cardiorespiratory Harmony (Coherence Score)**.
+  - Respiratory: **Breathing Phase & Depth (Respiration)**.
+  - Brainwaves: **Alpha (8–12 Hz)**, **Beta (15–30 Hz)**, **Theta (4–8 Hz)**, **Delta (0.5–4 Hz)**, and **SMR Rhythm (12–15 Hz)**.
+  - Metadata: **Cognitive State Name (`bio_state`)** and **Artifact Flag (`bio_artifact`)**.
+  - Interactive live search to filter terms instantly.
+- **Tab 2 — How Signals Connect (Physiological Coupling):**
+  - **Respiratory Sinus Arrhythmia (RSA):** The breath-heart coupling (heart accelerates during inhalation, decelerates during exhalation).
+  - **The Mental Stress Response:** Multi-system sympathetic cascade (elevated BPM, rapid breathing, Phasic EDA spikes, Alpha collapse, Beta surge).
+  - **Resonant Breathing & Coherence:** Harmonic synchronization at ~6 breaths/min.
+  - **Distinguishing Real Stress from Physical Sensor Noise:** Deep dive explaining why real stress moves all sensors harmoniously, while jaw clenching (EMG) or blinks (EOG) only corrupt isolated channels.
+- **Tab 3 — States & Scenarios Matrix:**
+  - Standard archetypes: *Baseline / Neutral*, *Deep Meditation / Flow*, *Cognitive Stress / Overload*, *Drowsiness / Hypnagogia*.
+  - Added new scenarios: *Acute Stress Trigger / Startle* and *Sensor Detached / Hardware Artifact*.
+- **Tab 4 — Figma Design Recipes:**
+  - Recipe 1: Switch UI Layouts Automatically with `bio_state`.
+  - Recipe 2: Dynamic Breathing Pacer with `bio_respiration`.
+  - Recipe 3: Sensor Disconnect Alert & Graceful Degradation with `bio_artifact`.
+  - Recipe 4: Responding to Acute Stress Triggers with `bio_phasic` & `bio_bpm`.
+
+### 3. Sensor Artifact Simulation & Dedicated Testing Datasets
+- **Realistic Artifact Modeling:**
+  - **Eye Blinks & Saccades (EOG):** Simulates the eyeball electrical dipole generating brief 200–400 ms frontal voltage deflections.
+  - **Jaw Clench & Facial Tension (EMG):** High-amplitude 20–100+ Hz electrical bursts that mimic muscle contraction noise.
+  - **Sensor Detachment & Contact Loss:** Flatlined readouts, zero BPM, or 50/60 Hz electrical grid noise with `bio_artifact = true`.
+- **Pre-Bundled Artifact & Stress Recordings:**
+  - `acute_stress_trigger.json` (30s): Simulates an immediate shock event with an instantaneous Phasic EDA surge and BPM jump.
+  - `sensor_artifact_dropout.json` (30s): Simulates loose hardware contact and total sensor detachment.
+- **Pre-Bundled Testing Playlist:**
+  - `ux_stress_and_artifact_test.json`: 4-stage automated protocol (*Baseline Onboarding → Sudden Error Startle → Sensor Disconnection → Guided Resonant Recovery*) designed to test error states and calm-down interactions in Figma prototypes.
+
+### 4. Scenario Playlists & Sequencing Engine
 - **Multi-Stage Biometric Journeys:** Chain any sequence of recordings (factory presets, Muse, WESAD, or custom CSV/JSON sessions) into an automated timeline.
-- **Configurable Stage Duration:** Override recording playback durations per stage (e.g., play only the first 15s or 45s of a 5-minute dataset) non-destructively.
+- **Configurable Stage Duration:** Override recording playback durations per stage non-destructively.
 - **Physiological Cubic Crossfading:** Seamlessly blend between disparate recordings using 3-second cubic smoothstep interpolation (`t * t * (3 - 2 * t)`), eliminating sudden metric cliffs across respiration, ECG vectors, and EEG band powers. Instant cut transitions are also supported.
 - **Server-Side 30 Hz Execution:** Like single playback, scenarios tick directly inside the Node.js background engine (`server/bioServer.cjs`), ensuring complete immunity against Chromium background tab throttling when working actively inside Figma.
-
-### 2. Scenario Studio & UI
-- **Dual-Mode Dataset Interface:** Toggle effortlessly between **`📄 Single Recordings`** and **`🔀 Scenario Playlists`** via a high-contrast segmented control.
 - **Visual Scenario Editor:**
   - Create, rename, duplicate, and delete custom scenarios.
   - Interactive stage cards with source recording dropdowns, stage labels, transition toggles, and duration steppers.
   - Reorder stages with instant Move Up / Move Down buttons.
 - **Live Scenario HUD & Transport:**
-  - **Dual Progress Bars:** Real-time visual feedback tracking both **Current Stage Progress** and **Overall Journey Progress**.
-  - **Stage Stepper Controls:** Quick **`⏮ Prev Stage`** and **`⏭ Next Stage`** buttons to jump directly between states during live design reviews.
-  - **Status Pill:** Displays active stage index, stage title, and remaining time countdown (`Stage 2 / 3: Cognitive Strain (24s remaining)`).
+  - Dual progress bars (Current Stage & Total Journey Progress).
+  - Quick `⏮ Prev Stage` and `⏭ Next Stage` buttons for live design presentations.
+  - Loop toggle and stage countdown telemetry.
+- **Portable Persistence:** Save and share `.playlist.json` files with 1-click export/import and native persistence in `~/Library/Application Support/simdata/playlists/`.
 
-### 3. Portable Scenario Persistence & Sharing
-- **Factory Scenarios Included:**
-  - `stress_recovery_protocol.json`: 3-stage protocol (30s Baseline → 45s Stress Overload → 60s Deep Recovery).
-  - `focus_to_fatigue.json`: 3-stage study (45s High Flow → 45s Cognitive Strain → 45s Drowsiness).
-  - `adaptive_rapid_test.json`: 15s rapid-cycle scenario designed for iterative Figma prototype stress-testing.
-- **1-Click Export & Import:** Save portable `.playlist.json` files to share with teammates, students, or project repositories.
-- **Native macOS Persistence:** Custom playlists persist in `~/Library/Application Support/simdata/playlists/`, with an **Open Folder** button to reveal them in Finder.
+### 5. Alternative Compact Oscilloscope View
+- **Dual View Modes:** Toggle between **Full View** and **Compact View** via an icon button in the oscilloscope header.
+- **Compact 80px Waveform Canvas:** Reduces the oscilloscope height to a streamlined 80px trace showing calibrated ECG, Respiration, and EEG waveforms.
+- **Horizontal Telemetry Cards:** Arranges Heart Rate, Breathing, and Coherence metrics horizontally alongside the trace.
+- **Zero-Scroll Interaction:** Allows designers to monitor real-time biosignals continuously while selecting recordings or configuring playlist steps below.
+- **Persistent Preference:** Selected view mode is remembered in `localStorage` (`simdata_osc_view`).
 
-### 4. Compact EEG Spectral Band Power Card
-- Optimized vertical padding, font scales, and progress bars to provide maximum oscilloscope canvas visibility without sacrificing biometric telemetry readability.
+### 6. Header Layout & UI Ergonomics
+- **Responsive Navigation:** Shortened "Figma" button and compacted transport controls to prevent overflow on standard laptop screens.
+- **Breakpoint-Stable Badges:** Ensured the `OSC :9000` status badge remains visible across mobile, tablet, and desktop viewports.
+- **Eliminated Layout Shifts:** Removed erratic message counters next to status badges to maintain a fixed, jitter-free header.
+- **Playlist Stage Name Spacing:** Expanded stage name input to `min-w-[200px]` with flex growth, and enabled two-row wrapping on narrow/split panes so stage titles are never truncated.
+- **Electron Window Default Size:** Increased default window size to `1200x800` (min `980x640`) for an optimal out-of-the-box layout without horizontal scrollbars.
 
 ---
 
 ## 🧪 Verification & Testing
 
-SimData v1.2.0 expands the automated test suite (`npm test`) to **15 comprehensive tests**:
+SimData v1.2.0 includes an expanded automated test suite (`npm test`) covering **15 comprehensive tests**:
 1. Telemetry Schema & Range Conformance (30 Hz)
 2. Respiratory Sinus Arrhythmia (RSA) Physiological Coupling
 3. 3-Second Non-Linear Preset Transition & Interpolation
 4. Motion Artifact Injection & Recovery (Blink, Clench, Detach)
-5. OSC UDP 4-Byte Binary Alignment (10 Addresses)
-6. Pre-bundled Dataset Recording Assets Integrity
+5. OSC UDP 4-Byte Binary Alignment (12 Addresses)
+6. Pre-bundled Dataset Recording Assets Integrity (including Acute Stress & Artifact Dropout)
 7. Figma Plugin Manifest & Typings Compilation
 8. Main Streamer Play/Pause Transport State Freeze
 9. Simulation Speed Multipliers (1x, 2x, 4x)
-10. 17-Column Template & REST Upload Persistence
+10. 17-Column Blank Template & REST Upload Persistence
 11. Muse / Mind Monitor CSV Auto-Detection & Conversion
 12. WESAD / Empatica E4 CSV Auto-Detection & Conversion
 13. Server-Side Dataset Stepping, Pause Freeze & Variable Speed
@@ -67,11 +116,13 @@ SimData v1.2.0 expands the automated test suite (`npm test`) to **15 comprehensi
 
 ## 📦 Distribution Packages
 
-| File | Size | Description |
-| :--- | :--- | :--- |
-| **[SimData-1.2.0-arm64.dmg](file:///Users/abookm1/Documents/GitHub/datastreamer/release/SimData-1.2.0-arm64.dmg)** | ~99 MB | Apple Silicon macOS Installer (Drag-and-Drop) |
-| **[SimData-1.2.0-arm64-mac.zip](file:///Users/abookm1/Documents/GitHub/datastreamer/release/SimData-1.2.0-arm64-mac.zip)** | ~95 MB | Portable Apple Silicon macOS Application Bundle |
-| **[simdata-figma-plugin.zip](file:///Users/abookm1/Documents/GitHub/datastreamer/figma-plugin/simdata-figma-plugin.zip)** | ~6 KB | Companion Figma Plugin Bundle (Manifest + UI + Code) |
+| Platform | File | Size | Description |
+| :--- | :--- | :--- | :--- |
+| **Windows** | **[SimData Setup 1.2.0.exe](file:///Users/abookm1/Documents/GitHub/datastreamer/release/SimData%20Setup%201.2.0.exe)** | ~86 MB | Windows x64 NSIS Installer (Desktop & Start Menu shortcuts) |
+| **Windows** | **[SimData 1.2.0.exe](file:///Users/abookm1/Documents/GitHub/datastreamer/release/SimData%201.2.0.exe)** | ~78 MB | Windows x64 Standalone Portable Executable (No installation required) |
+| **macOS** | **[SimData-1.2.0-arm64.dmg](file:///Users/abookm1/Documents/GitHub/datastreamer/release/SimData-1.2.0-arm64.dmg)** | ~99 MB | Apple Silicon macOS Installer (Drag-and-Drop) |
+| **macOS** | **[SimData-1.2.0-arm64-mac.zip](file:///Users/abookm1/Documents/GitHub/datastreamer/release/SimData-1.2.0-arm64-mac.zip)** | ~95 MB | Portable Apple Silicon macOS Application Bundle |
+| **Figma** | **[simdata-figma-plugin.zip](file:///Users/abookm1/Documents/GitHub/datastreamer/figma-plugin/simdata-figma-plugin.zip)** | ~6 KB | Companion Figma Plugin Bundle (Manifest + UI + Code) |
 
 ---
 
