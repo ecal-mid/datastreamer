@@ -48,8 +48,7 @@ interface HelpModalProps {
 }
 
 export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
-  const [activeTab, setActiveTab] = useState<'glossary' | 'connections' | 'archetypes' | 'recipes'>('glossary');
-  const [recipeSubTab, setRecipeSubTab] = useState<'figma' | 'web'>('figma');
+  const [activeTab, setActiveTab] = useState<'glossary' | 'connections' | 'archetypes' | 'figma' | 'vibecoding'>('glossary');
   const [copiedPrompt, setCopiedPrompt] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -74,7 +73,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[88vh] flex flex-col p-0 overflow-hidden bg-card border-border shadow-2xl">
+      <DialogContent className="max-w-4xl w-[94vw] max-h-[88vh] flex flex-col p-0 overflow-hidden bg-card border-border shadow-2xl">
         {/* Header */}
         <DialogHeader className="p-4 sm:p-5 border-b border-border bg-secondary/30 shrink-0">
           <div className="flex items-center justify-between gap-3">
@@ -88,7 +87,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                   <Badge variant="cyan" className="text-[10px] font-mono px-1.5 py-0">v1.2.0</Badge>
                 </DialogTitle>
                 <DialogDescription className="text-xs text-muted-foreground mt-0.5">
-                  Clear explanations of biometric terms, calculations, sensor artifacts, and Figma prototyping recipes.
+                  Clear explanations of biometric terms, calculations, sensor artifacts, Figma variables, and AI vibe coding recipes.
                 </DialogDescription>
               </div>
             </div>
@@ -121,23 +120,28 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
           onValueChange={(v) => setActiveTab(v as any)}
           className="flex-1 flex flex-col overflow-hidden"
         >
-          <div className="px-4 sm:px-5 pt-3 pb-2 border-b border-border/60 bg-secondary/10 shrink-0">
-            <TabsList className="w-full justify-start bg-secondary/40 font-mono text-xs">
-              <TabsTrigger value="glossary" className="gap-1.5 text-xs">
+          <div className="px-4 sm:px-5 pt-3 pb-2 border-b border-border/60 bg-secondary/10 shrink-0 overflow-x-auto scrollbar-thin">
+            <TabsList className="w-max min-w-full justify-start bg-secondary/40 font-mono text-xs p-1 gap-1 flex-nowrap">
+              <TabsTrigger value="glossary" className="gap-1.5 text-xs shrink-0">
                 <Brain className="w-3.5 h-3.5 text-cyan-400" />
                 <span>1. Terms & Dictionary</span>
               </TabsTrigger>
-              <TabsTrigger value="connections" className="gap-1.5 text-xs">
+              <TabsTrigger value="connections" className="gap-1.5 text-xs shrink-0">
                 <Link2 className="w-3.5 h-3.5 text-emerald-400" />
                 <span>2. How Signals Connect</span>
               </TabsTrigger>
-              <TabsTrigger value="archetypes" className="gap-1.5 text-xs">
+              <TabsTrigger value="archetypes" className="gap-1.5 text-xs shrink-0">
                 <Sparkles className="w-3.5 h-3.5 text-purple-400" />
                 <span>3. States & Scenarios</span>
               </TabsTrigger>
-              <TabsTrigger value="recipes" className="gap-1.5 text-xs">
+              <TabsTrigger value="figma" className="gap-1.5 text-xs shrink-0">
                 <Palette className="w-3.5 h-3.5 text-amber-400" />
-                <span>4. Prototyping Recipes</span>
+                <span>4. Figma Recipes</span>
+              </TabsTrigger>
+              <TabsTrigger value="vibecoding" className="gap-1.5 text-xs shrink-0">
+                <Code2 className="w-3.5 h-3.5 text-cyan-400" />
+                <span>5. Vibe Coding (AI & Web)</span>
+                <Badge variant="cyan" className="text-[9px] font-mono px-1 py-0 ml-0.5">AI</Badge>
               </TabsTrigger>
             </TabsList>
           </div>
@@ -442,247 +446,246 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
             </div>
           </TabsContent>
 
-          {/* Tab 4: Prototyping Recipes (Figma & Web Vibe Coding) */}
-          <TabsContent value="recipes" className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 mt-0">
-            {/* Sub-mode Segmented Switcher: Figma Variables vs Web & Vibe Coding */}
-            <div className="flex flex-wrap items-center justify-between gap-2 pb-1 border-b border-border/80">
-              <div className="flex items-center gap-1 bg-secondary/50 p-1 rounded-lg border border-border/70 text-xs font-mono">
-                <button
-                  onClick={() => setRecipeSubTab('figma')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-all cursor-pointer ${
-                    recipeSubTab === 'figma'
-                      ? 'bg-primary text-primary-foreground font-bold shadow-xs'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  <Palette className="w-3.5 h-3.5" />
-                  <span>Figma Variables (No-Code)</span>
-                </button>
-                <button
-                  onClick={() => setRecipeSubTab('web')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-all cursor-pointer ${
-                    recipeSubTab === 'web'
-                      ? 'bg-primary text-primary-foreground font-bold shadow-xs'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  <Code2 className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>Web & Vibe Coding (Prompts & JS)</span>
-                </button>
+          {/* Tab 4: Figma Recipes (No-Code Variables) */}
+          <TabsContent value="figma" className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 mt-0">
+            {/* Quick banner linking to Vibe Coding */}
+            <div className="flex items-center justify-between gap-3 p-3 rounded-lg bg-secondary/30 border border-cyan-500/30 text-xs">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Code2 className="w-4 h-4 text-cyan-400 shrink-0" />
+                <span>Developing with code or AI assistants (Cursor, Claude, Copilot)?</span>
               </div>
-
-              <div className="text-[11px] font-mono text-muted-foreground hidden sm:block">
-                {recipeSubTab === 'figma' ? 'Native Figma BioData variables' : 'Live WebSocket ws://127.0.0.1:8081 (30 Hz)'}
-              </div>
+              <Button
+                size="xs"
+                variant="outline"
+                onClick={() => setActiveTab('vibecoding')}
+                className="h-6 px-2.5 text-[10px] font-mono gap-1 text-cyan-400 hover:text-cyan-300 border-cyan-500/40 cursor-pointer shrink-0"
+              >
+                <span>Open Vibe Coding Recipes</span>
+                <ArrowRight className="w-3 h-3" />
+              </Button>
             </div>
 
-            {recipeSubTab === 'figma' ? (
-              <div className="space-y-3.5 pt-1">
-                <div className="text-xs text-muted-foreground leading-relaxed">
-                  Step-by-step instructions for connecting SimData&apos;s native Figma variables (<code className="text-primary font-mono">BioData</code> collection) to prototype components:
+            <div className="text-xs text-muted-foreground leading-relaxed">
+              Step-by-step instructions for connecting SimData&apos;s native Figma variables (<code className="text-primary font-mono">BioData</code> collection) to prototype components:
+            </div>
+
+            {/* Recipe 1: Adaptive Component Variants */}
+            <Card className="bg-secondary/25 border-purple-500/30 p-3.5 space-y-2.5">
+              <div className="flex items-center gap-2 font-bold text-sm text-purple-400">
+                <Layers className="w-4 h-4" />
+                <span>Recipe 1: Switch UI Layouts Automatically with `bio_state`</span>
+              </div>
+              <p className="text-xs text-foreground/90 leading-relaxed">
+                Allow your interface to change layouts or switch color modes when the user moves between cognitive states:
+              </p>
+              <ol className="list-decimal list-inside space-y-1 text-xs font-mono text-muted-foreground bg-card/60 p-3 rounded border border-border/50">
+                <li>Create a Figma Component with a Variant property named <strong className="text-foreground">&quot;State&quot;</strong>.</li>
+                <li>Name the variants: <strong className="text-foreground">&quot;Baseline / Neutral&quot;</strong>, <strong className="text-foreground">&quot;Deep Meditation / Flow&quot;</strong>, and <strong className="text-foreground">&quot;Cognitive Stress&quot;</strong>.</li>
+                <li>In the right design sidebar, bind the component variant directly to the string variable <strong className="text-primary">bio_state</strong>.</li>
+                <li>In SimData, change presets or run a scenario playlist. Your Figma prototype will switch variants on canvas in real time.</li>
+              </ol>
+            </Card>
+
+            {/* Recipe 2: The Breathing Pacer */}
+            <Card className="bg-secondary/25 border-cyan-500/30 p-3.5 space-y-2.5">
+              <div className="flex items-center gap-2 font-bold text-sm text-cyan-400">
+                <Wind className="w-4 h-4" />
+                <span>Recipe 2: Dynamic Breathing Pacer with `bio_respiration`</span>
+              </div>
+              <p className="text-xs text-foreground/90 leading-relaxed">
+                Create a visual breathing indicator that expands during inhalation and contracts during exhalation:
+              </p>
+              <ol className="list-decimal list-inside space-y-1 text-xs font-mono text-muted-foreground bg-card/60 p-3 rounded border border-border/50">
+                <li>Draw an Ellipse or Frame (e.g. 120 &times; 120 px) in Figma.</li>
+                <li>Bind its <strong>Width</strong> and <strong>Height</strong> to <strong className="text-primary">bio_respiration</strong> (or bind it to <strong>Layer Opacity</strong> or <strong>Corner Radius</strong>).</li>
+                <li>Watch the circle expand and contract smoothly in sync with SimData&apos;s live 30 Hz stream.</li>
+              </ol>
+            </Card>
+
+            {/* Recipe 3: Sensor Disconnect Alert & Graceful Degradation */}
+            <Card className="bg-secondary/25 border-amber-500/30 p-3.5 space-y-2.5">
+              <div className="flex items-center gap-2 font-bold text-sm text-amber-400">
+                <ShieldAlert className="w-4 h-4" />
+                <span>Recipe 3: Sensor Disconnect Alert & Graceful Degradation with `bio_artifact`</span>
+              </div>
+              <p className="text-xs text-foreground/90 leading-relaxed">
+                Design a graceful error state that notifies the user when sensor contact is lost without misinterpreting the disconnection as emotional stress:
+              </p>
+              <ol className="list-decimal list-inside space-y-1 text-xs font-mono text-muted-foreground bg-card/60 p-3 rounded border border-border/50">
+                <li>Design an Alert Toast or Top Banner: <strong className="text-foreground">&quot;Sensor Contact Lost — Adjust Headband&quot;</strong>.</li>
+                <li>In Figma&apos;s right design panel under <strong>Layer</strong>, bind the visibility (eye icon) to the Boolean variable <strong className="text-primary">bio_artifact</strong>. The banner only appears when an artifact occurs.</li>
+                <li>Bind the opacity of your main visualization: when <strong className="text-primary">bio_artifact</strong> is true, reduce opacity to 40% so the user knows biofeedback is temporarily paused.</li>
+                <li>Run the pre-bundled scenario playlist <strong className="text-foreground">&quot;UX Testing: Stress Trigger & Sensor Dropout&quot;</strong> in SimData to verify the alert banner and recovery behavior.</li>
+              </ol>
+            </Card>
+
+            {/* Recipe 4: Dynamic Stress Interventions */}
+            <Card className="bg-secondary/25 border-red-500/30 p-3.5 space-y-2.5">
+              <div className="flex items-center gap-2 font-bold text-sm text-red-400">
+                <Heart className="w-4 h-4" />
+                <span>Recipe 4: Responding to Acute Stress Triggers with `bio_phasic` & `bio_bpm`</span>
+              </div>
+              <p className="text-xs text-foreground/90 leading-relaxed">
+                Build an adaptive UI intervention that responds immediately to an acute user startle or cognitive error:
+              </p>
+              <ol className="list-decimal list-inside space-y-1 text-xs font-mono text-muted-foreground bg-card/60 p-3 rounded border border-border/50">
+                <li>Design a supportive calm-down modal or helpful guidance prompt.</li>
+                <li>Bind its display property or variant to <strong className="text-primary">bio_state</strong> when equal to <strong className="text-foreground">&quot;Acute Stress Trigger&quot;</strong>.</li>
+                <li>Optionally bind a numeric text field to <strong className="text-red-400">bio_bpm</strong> to show heart rate acceleration in real time.</li>
+                <li>Select and play <strong className="text-foreground">acute_stress_trigger.json</strong> in the Dataset tab to test your prototype&apos;s reaction and calm-down recovery.</li>
+              </ol>
+            </Card>
+          </TabsContent>
+
+          {/* Tab 5: Web & Vibe Coding Recipes */}
+          <TabsContent value="vibecoding" className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 mt-0">
+            {/* Quick banner linking to Figma Recipes */}
+            <div className="flex items-center justify-between gap-3 p-3 rounded-lg bg-secondary/30 border border-amber-500/30 text-xs">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Palette className="w-4 h-4 text-amber-400 shrink-0" />
+                <span>Prototyping in Figma with no-code variables instead?</span>
+              </div>
+              <Button
+                size="xs"
+                variant="outline"
+                onClick={() => setActiveTab('figma')}
+                className="h-6 px-2.5 text-[10px] font-mono gap-1 text-amber-400 hover:text-amber-300 border-amber-500/40 cursor-pointer shrink-0"
+              >
+                <span>Open Figma Recipes</span>
+                <ArrowRight className="w-3 h-3" />
+              </Button>
+            </div>
+
+            {/* Intro & Live WebSocket Stream Reference */}
+            <Card className="bg-secondary/30 border-cyan-500/30 p-4 space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 font-bold text-sm text-cyan-400">
+                  <Terminal className="w-4 h-4" />
+                  <span>Live WebSocket Stream & Telemetry Schema</span>
+                </div>
+                <Badge variant="cyan" className="font-mono text-[10px]">
+                  ws://127.0.0.1:8081
+                </Badge>
+              </div>
+              <p className="text-xs text-foreground/90 leading-relaxed">
+                SimData broadcasts continuous JSON packets at <strong>30 Hz</strong> across local WebSocket port <strong>8081</strong> (fallback: <strong>8080</strong>). Any frontend stack (React, Vue, Svelte, vanilla HTML/JS, p5.js, Three.js) can subscribe with zero external libraries.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-mono">
+                <div className="bg-card/70 p-2.5 rounded border border-border/50 space-y-1">
+                  <strong className="text-emerald-400 block mb-1">Breathing & Cardiac:</strong>
+                  <div>• <code className="text-primary">biometrics.respiration.value</code> (0.0 – 1.0)</div>
+                  <div>• <code className="text-primary">biometrics.respiration.phase</code> (&quot;inhale&quot;|&quot;exhale&quot;)</div>
+                  <div>• <code className="text-red-400">biometrics.hrv.bpm</code> (Heart Rate, 50 – 130)</div>
+                  <div>• <code className="text-emerald-400">biometrics.hrv.coherence</code> (Harmony, 0.0 – 1.0)</div>
+                  <div>• <code className="text-muted-foreground">biometrics.hrv.rmssd</code> (HRV variance in ms)</div>
                 </div>
 
-                {/* Recipe 1: Adaptive Component Variants */}
-                <Card className="bg-secondary/25 border-purple-500/30 p-3.5 space-y-2.5">
-                  <div className="flex items-center gap-2 font-bold text-sm text-purple-400">
-                    <Layers className="w-4 h-4" />
-                    <span>Recipe 1: Switch UI Layouts Automatically with `bio_state`</span>
-                  </div>
-                  <p className="text-xs text-foreground/90 leading-relaxed">
-                    Allow your interface to change layouts or switch color modes when the user moves between cognitive states:
-                  </p>
-                  <ol className="list-decimal list-inside space-y-1 text-xs font-mono text-muted-foreground bg-card/60 p-3 rounded border border-border/50">
-                    <li>Create a Figma Component with a Variant property named <strong className="text-foreground">&quot;State&quot;</strong>.</li>
-                    <li>Name the variants: <strong className="text-foreground">&quot;Baseline / Neutral&quot;</strong>, <strong className="text-foreground">&quot;Deep Meditation / Flow&quot;</strong>, and <strong className="text-foreground">&quot;Cognitive Stress&quot;</strong>.</li>
-                    <li>In the right design sidebar, bind the component variant directly to the string variable <strong className="text-primary">bio_state</strong>.</li>
-                    <li>In SimData, change presets or run a scenario playlist. Your Figma prototype will switch variants on canvas in real time.</li>
-                  </ol>
-                </Card>
-
-                {/* Recipe 2: The Breathing Pacer */}
-                <Card className="bg-secondary/25 border-cyan-500/30 p-3.5 space-y-2.5">
-                  <div className="flex items-center gap-2 font-bold text-sm text-cyan-400">
-                    <Wind className="w-4 h-4" />
-                    <span>Recipe 2: Dynamic Breathing Pacer with `bio_respiration`</span>
-                  </div>
-                  <p className="text-xs text-foreground/90 leading-relaxed">
-                    Create a visual breathing indicator that expands during inhalation and contracts during exhalation:
-                  </p>
-                  <ol className="list-decimal list-inside space-y-1 text-xs font-mono text-muted-foreground bg-card/60 p-3 rounded border border-border/50">
-                    <li>Draw an Ellipse or Frame (e.g. 120 &times; 120 px) in Figma.</li>
-                    <li>Bind its <strong>Width</strong> and <strong>Height</strong> to <strong className="text-primary">bio_respiration</strong> (or bind it to <strong>Layer Opacity</strong> or <strong>Corner Radius</strong>).</li>
-                    <li>Watch the circle expand and contract smoothly in sync with SimData&apos;s live 30 Hz stream.</li>
-                  </ol>
-                </Card>
-
-                {/* Recipe 3: Sensor Disconnect Alert & Graceful Degradation */}
-                <Card className="bg-secondary/25 border-amber-500/30 p-3.5 space-y-2.5">
-                  <div className="flex items-center gap-2 font-bold text-sm text-amber-400">
-                    <ShieldAlert className="w-4 h-4" />
-                    <span>Recipe 3: Sensor Disconnect Alert & Graceful Degradation with `bio_artifact`</span>
-                  </div>
-                  <p className="text-xs text-foreground/90 leading-relaxed">
-                    Design a graceful error state that notifies the user when sensor contact is lost without misinterpreting the disconnection as emotional stress:
-                  </p>
-                  <ol className="list-decimal list-inside space-y-1 text-xs font-mono text-muted-foreground bg-card/60 p-3 rounded border border-border/50">
-                    <li>Design an Alert Toast or Top Banner: <strong className="text-foreground">&quot;Sensor Contact Lost — Adjust Headband&quot;</strong>.</li>
-                    <li>In Figma&apos;s right design panel under <strong>Layer</strong>, bind the visibility (eye icon) to the Boolean variable <strong className="text-primary">bio_artifact</strong>. The banner only appears when an artifact occurs.</li>
-                    <li>Bind the opacity of your main visualization: when <strong className="text-primary">bio_artifact</strong> is true, reduce opacity to 40% so the user knows biofeedback is temporarily paused.</li>
-                    <li>Run the pre-bundled scenario playlist <strong className="text-foreground">&quot;UX Testing: Stress Trigger & Sensor Dropout&quot;</strong> in SimData to verify the alert banner and recovery behavior.</li>
-                  </ol>
-                </Card>
-
-                {/* Recipe 4: Dynamic Stress Interventions */}
-                <Card className="bg-secondary/25 border-red-500/30 p-3.5 space-y-2.5">
-                  <div className="flex items-center gap-2 font-bold text-sm text-red-400">
-                    <Heart className="w-4 h-4" />
-                    <span>Recipe 4: Responding to Acute Stress Triggers with `bio_phasic` & `bio_bpm`</span>
-                  </div>
-                  <p className="text-xs text-foreground/90 leading-relaxed">
-                    Build an adaptive UI intervention that responds immediately to an acute user startle or cognitive error:
-                  </p>
-                  <ol className="list-decimal list-inside space-y-1 text-xs font-mono text-muted-foreground bg-card/60 p-3 rounded border border-border/50">
-                    <li>Design a supportive calm-down modal or helpful guidance prompt.</li>
-                    <li>Bind its display property or variant to <strong className="text-primary">bio_state</strong> when equal to <strong className="text-foreground">&quot;Acute Stress Trigger&quot;</strong>.</li>
-                    <li>Optionally bind a numeric text field to <strong className="text-red-400">bio_bpm</strong> to show heart rate acceleration in real time.</li>
-                    <li>Select and play <strong className="text-foreground">acute_stress_trigger.json</strong> in the Dataset tab to test your prototype&apos;s reaction and calm-down recovery.</li>
-                  </ol>
-                </Card>
-              </div>
-            ) : (
-              <div className="space-y-4 pt-1">
-                {/* Intro & Live WebSocket Stream Reference */}
-                <Card className="bg-secondary/30 border-cyan-500/30 p-4 space-y-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 font-bold text-sm text-cyan-400">
-                      <Terminal className="w-4 h-4" />
-                      <span>Live WebSocket Stream & Telemetry Schema</span>
-                    </div>
-                    <Badge variant="cyan" className="font-mono text-[10px]">
-                      ws://127.0.0.1:8081
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-foreground/90 leading-relaxed">
-                    SimData broadcasts continuous JSON packets at <strong>30 Hz</strong> across local WebSocket port <strong>8081</strong> (fallback: <strong>8080</strong>). Any frontend stack (React, Vue, Svelte, vanilla HTML/JS, p5.js, Three.js) can subscribe with zero external libraries.
-                  </p>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-mono">
-                    <div className="bg-card/70 p-2.5 rounded border border-border/50 space-y-1">
-                      <strong className="text-emerald-400 block mb-1">Breathing & Cardiac:</strong>
-                      <div>• <code className="text-primary">biometrics.respiration.value</code> (0.0 – 1.0)</div>
-                      <div>• <code className="text-primary">biometrics.respiration.phase</code> (&quot;inhale&quot;|&quot;exhale&quot;)</div>
-                      <div>• <code className="text-red-400">biometrics.hrv.bpm</code> (Heart Rate, 50 – 130)</div>
-                      <div>• <code className="text-emerald-400">biometrics.hrv.coherence</code> (Harmony, 0.0 – 1.0)</div>
-                      <div>• <code className="text-muted-foreground">biometrics.hrv.rmssd</code> (HRV variance in ms)</div>
-                    </div>
-
-                    <div className="bg-card/70 p-2.5 rounded border border-border/50 space-y-1">
-                      <strong className="text-amber-400 block mb-1">Skin & States:</strong>
-                      <div>• <code className="text-amber-400">biometrics.eda.tonic</code> (Skin baseline µS)</div>
-                      <div>• <code className="text-orange-400">biometrics.eda.phasic</code> (Reaction spike µS)</div>
-                      <div>• <code className="text-purple-400">biometrics.eeg.alpha / beta</code> (0.0 – 1.0)</div>
-                      <div>• <code className="text-cyan-400">states.calm_index</code> (Calm score, 0.0 – 1.0)</div>
-                      <div>• <code className="text-foreground">states.state_name</code> (Human state label)</div>
-                      <div>• <code className="text-red-400">states.artifact_flag</code> (boolean noise)</div>
-                    </div>
-                  </div>
-                </Card>
-
-                {/* Vibe Coding Prompts List with Copy Buttons */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-xs font-bold font-mono uppercase text-foreground flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-primary" />
-                      <span>Copy-Paste Vibe Coding Prompts (Cursor / Claude / Copilot / ChatGPT)</span>
-                    </h3>
-                    <span className="text-[10px] font-mono text-muted-foreground">Click to copy prompt</span>
-                  </div>
-
-                  {VIBE_PROMPTS.map((p) => {
-                    const isCopied = copiedPrompt === p.id;
-                    return (
-                      <Card key={p.id} className="bg-secondary/25 border-border/70 p-3.5 space-y-2.5">
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2">
-                            <span className="text-base">{p.icon}</span>
-                            <span className="font-bold text-xs text-foreground">{p.title}</span>
-                            <Badge variant="outline" className="text-[9px] font-mono py-0">{p.tag}</Badge>
-                          </div>
-                          <Button
-                            size="xs"
-                            variant={isCopied ? "secondary" : "outline"}
-                            onClick={() => handleCopy(p.prompt, p.id)}
-                            className={`h-6 px-2 text-[10px] font-mono gap-1 cursor-pointer ${
-                              isCopied ? 'border-emerald-500/50 text-emerald-300 bg-emerald-500/15' : ''
-                            }`}
-                          >
-                            {isCopied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-primary" />}
-                            <span>{isCopied ? 'Copied to Clipboard!' : 'Copy Prompt'}</span>
-                          </Button>
-                        </div>
-
-                        <p className="text-xs text-muted-foreground">
-                          {p.description}
-                        </p>
-
-                        <pre className="bg-card/80 p-2.5 rounded border border-border/50 text-[11px] font-mono text-muted-foreground/90 whitespace-pre-wrap leading-relaxed overflow-x-auto max-h-36 overflow-y-auto">
-                          {p.prompt}
-                        </pre>
-                      </Card>
-                    );
-                  })}
+                <div className="bg-card/70 p-2.5 rounded border border-border/50 space-y-1">
+                  <strong className="text-amber-400 block mb-1">Skin & States:</strong>
+                  <div>• <code className="text-amber-400">biometrics.eda.tonic</code> (Skin baseline µS)</div>
+                  <div>• <code className="text-orange-400">biometrics.eda.phasic</code> (Reaction spike µS)</div>
+                  <div>• <code className="text-purple-400">biometrics.eeg.alpha / beta</code> (0.0 – 1.0)</div>
+                  <div>• <code className="text-cyan-400">states.calm_index</code> (Calm score, 0.0 – 1.0)</div>
+                  <div>• <code className="text-foreground">states.state_name</code> (Human state label)</div>
+                  <div>• <code className="text-red-400">states.artifact_flag</code> (boolean noise)</div>
                 </div>
-
-                {/* Minimal Vanilla JS Starter Code */}
-                <Card className="bg-secondary/25 border-border/70 p-3.5 space-y-2.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 font-bold text-xs text-foreground">
-                      <Code2 className="w-4 h-4 text-emerald-400" />
-                      <span>20-Line Vanilla JS Starter Snippet (Zero Dependencies)</span>
-                    </div>
-                    <Button
-                      size="xs"
-                      variant={copiedPrompt === 'vanilla-js' ? "secondary" : "outline"}
-                      onClick={() => handleCopy(VANILLA_JS_SNIPPET, 'vanilla-js')}
-                      className={`h-6 px-2 text-[10px] font-mono gap-1 cursor-pointer ${
-                        copiedPrompt === 'vanilla-js' ? 'border-emerald-500/50 text-emerald-300 bg-emerald-500/15' : ''
-                      }`}
-                    >
-                      {copiedPrompt === 'vanilla-js' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-primary" />}
-                      <span>{copiedPrompt === 'vanilla-js' ? 'Copied Snippet!' : 'Copy Code'}</span>
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Connects to SimData and maps biometrics directly to CSS Custom Properties (<code className="text-primary font-mono">--resp</code>, <code className="text-red-400 font-mono">--bpm</code>, <code className="text-emerald-400 font-mono">--coherence</code>) so your CSS animations react smoothly:
-                  </p>
-                  <pre className="bg-card/80 p-2.5 rounded border border-border/50 text-[11px] font-mono text-muted-foreground/90 whitespace-pre-wrap leading-relaxed overflow-x-auto">
-                    {VANILLA_JS_SNIPPET}
-                  </pre>
-                </Card>
-
-                {/* Best Practices & Prototyping Rules */}
-                <Card className="bg-secondary/25 border-amber-500/30 p-3.5 space-y-2">
-                  <div className="flex items-center gap-2 font-bold text-xs text-amber-400">
-                    <Sparkles className="w-4 h-4" />
-                    <span>Four Golden Rules for Biofeedback Vibe Coding</span>
-                  </div>
-                  <ul className="space-y-1.5 text-xs text-foreground/90 font-mono list-disc list-inside">
-                    <li>
-                      <strong className="text-amber-300">1. Smooth 30 Hz updates:</strong> Never animate raw numbers directly. Use CSS <code className="text-primary">transition: transform 0.2s ease-out</code> or linear interpolation (<code className="text-primary">current += (target - current) * 0.1</code>) inside <code className="text-primary">requestAnimationFrame</code>.
-                    </li>
-                    <li>
-                      <strong className="text-amber-300">2. Respect `artifact_flag`:</strong> When <code className="text-red-400">artifact_flag === true</code>, freeze active timers or gently blur the canvas. Never tell the user they are stressed during physical motion.
-                    </li>
-                    <li>
-                      <strong className="text-amber-300">3. Map normalized ranges (0.0 to 1.0):</strong> Use <code className="text-emerald-400">biometrics.respiration.value</code> to drive scale (e.g. <code className="text-primary">scale(0.85 + resp * 0.3)</code>) and <code className="text-emerald-400">biometrics.hrv.coherence</code> to drive color hue.
-                    </li>
-                    <li>
-                      <strong className="text-amber-300">4. Test with Scenario Playlists:</strong> Use SimData&apos;s pre-bundled <strong className="text-foreground">&quot;UX Testing: Stress Trigger & Sensor Dropout&quot;</strong> playlist to verify how your prototype gracefully recovers from errors and startles.
-                    </li>
-                  </ul>
-                </Card>
               </div>
-            )}
+            </Card>
+
+            {/* Vibe Coding Prompts List with Copy Buttons */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-bold font-mono uppercase text-foreground flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-primary" />
+                  <span>Copy-Paste Vibe Coding Prompts (Cursor / Claude / Copilot / ChatGPT)</span>
+                </h3>
+                <span className="text-[10px] font-mono text-muted-foreground">Click to copy prompt</span>
+              </div>
+
+              {VIBE_PROMPTS.map((p) => {
+                const isCopied = copiedPrompt === p.id;
+                return (
+                  <Card key={p.id} className="bg-secondary/25 border-border/70 p-3.5 space-y-2.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base">{p.icon}</span>
+                        <span className="font-bold text-xs text-foreground">{p.title}</span>
+                        <Badge variant="outline" className="text-[9px] font-mono py-0">{p.tag}</Badge>
+                      </div>
+                      <Button
+                        size="xs"
+                        variant={isCopied ? "secondary" : "outline"}
+                        onClick={() => handleCopy(p.prompt, p.id)}
+                        className={`h-6 px-2 text-[10px] font-mono gap-1 cursor-pointer ${
+                          isCopied ? 'border-emerald-500/50 text-emerald-300 bg-emerald-500/15' : ''
+                        }`}
+                      >
+                        {isCopied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-primary" />}
+                        <span>{isCopied ? 'Copied to Clipboard!' : 'Copy Prompt'}</span>
+                      </Button>
+                    </div>
+
+                    <p className="text-xs text-muted-foreground">
+                      {p.description}
+                    </p>
+
+                    <pre className="bg-card/80 p-2.5 rounded border border-border/50 text-[11px] font-mono text-muted-foreground/90 whitespace-pre-wrap leading-relaxed overflow-x-auto max-h-36 overflow-y-auto">
+                      {p.prompt}
+                    </pre>
+                  </Card>
+                );
+              })}
+            </div>
+
+            {/* Minimal Vanilla JS Starter Code */}
+            <Card className="bg-secondary/25 border-border/70 p-3.5 space-y-2.5">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 font-bold text-xs text-foreground">
+                  <Code2 className="w-4 h-4 text-emerald-400" />
+                  <span>20-Line Vanilla JS Starter Snippet (Zero Dependencies)</span>
+                </div>
+                <Button
+                  size="xs"
+                  variant={copiedPrompt === 'vanilla-js' ? "secondary" : "outline"}
+                  onClick={() => handleCopy(VANILLA_JS_SNIPPET, 'vanilla-js')}
+                  className={`h-6 px-2 text-[10px] font-mono gap-1 cursor-pointer ${
+                    copiedPrompt === 'vanilla-js' ? 'border-emerald-500/50 text-emerald-300 bg-emerald-500/15' : ''
+                  }`}
+                >
+                  {copiedPrompt === 'vanilla-js' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-primary" />}
+                  <span>{copiedPrompt === 'vanilla-js' ? 'Copied Snippet!' : 'Copy Code'}</span>
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Connects to SimData and maps biometrics directly to CSS Custom Properties (<code className="text-primary font-mono">--resp</code>, <code className="text-red-400 font-mono">--bpm</code>, <code className="text-emerald-400 font-mono">--coherence</code>) so your CSS animations react smoothly:
+              </p>
+              <pre className="bg-card/80 p-2.5 rounded border border-border/50 text-[11px] font-mono text-muted-foreground/90 whitespace-pre-wrap leading-relaxed overflow-x-auto">
+                {VANILLA_JS_SNIPPET}
+              </pre>
+            </Card>
+
+            {/* Best Practices & Prototyping Rules */}
+            <Card className="bg-secondary/25 border-amber-500/30 p-3.5 space-y-2">
+              <div className="flex items-center gap-2 font-bold text-xs text-amber-400">
+                <Sparkles className="w-4 h-4" />
+                <span>Four Golden Rules for Biofeedback Vibe Coding</span>
+              </div>
+              <ul className="space-y-1.5 text-xs text-foreground/90 font-mono list-disc list-inside">
+                <li>
+                  <strong className="text-amber-300">1. Smooth 30 Hz updates:</strong> Never animate raw numbers directly. Use CSS <code className="text-primary">transition: transform 0.2s ease-out</code> or linear interpolation (<code className="text-primary">current += (target - current) * 0.1</code>) inside <code className="text-primary">requestAnimationFrame</code>.
+                </li>
+                <li>
+                  <strong className="text-amber-300">2. Respect `artifact_flag`:</strong> When <code className="text-red-400">artifact_flag === true</code>, freeze active timers or gently blur the canvas. Never tell the user they are stressed during physical motion.
+                </li>
+                <li>
+                  <strong className="text-amber-300">3. Map normalized ranges (0.0 to 1.0):</strong> Use <code className="text-emerald-400">biometrics.respiration.value</code> to drive scale (e.g. <code className="text-primary">scale(0.85 + resp * 0.3)</code>) and <code className="text-emerald-400">biometrics.hrv.coherence</code> to drive color hue.
+                </li>
+                <li>
+                  <strong className="text-amber-300">4. Test with Scenario Playlists:</strong> Use SimData&apos;s pre-bundled <strong className="text-foreground">&quot;UX Testing: Stress Trigger & Sensor Dropout&quot;</strong> playlist to verify how your prototype gracefully recovers from errors and startles.
+                </li>
+              </ul>
+            </Card>
           </TabsContent>
         </Tabs>
 
