@@ -272,9 +272,16 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                 </div>
 
                 <div className="bg-card/50 p-2.5 rounded border border-border/40">
+                  <span className="text-orange-400 font-bold block mb-0.5">Optical Sensor Movement & Ambient Light Leakage (PPG Artifacts):</span>
+                  <span className="text-foreground/90">
+                    When a smartwatch, ring, or earclip shifts on the skin during hand gestures, ambient room light leaks into the optical photodiode. This causes sudden baseline drift and erratic pulse readings that do not reflect actual heart activity. SimData simulates this optical interference and sets <strong className="text-primary font-bold">bio_artifact = true</strong>.
+                  </span>
+                </div>
+
+                <div className="bg-card/50 p-2.5 rounded border border-border/40">
                   <span className="text-red-400 font-bold block mb-0.5">Loose Sensor or Hardware Detachment:</span>
                   <span className="text-foreground/90">
-                    Contact resistance jumps to maximum, causing the signal to flatline to zero or pick up 50/60 Hz powerline hum. SimData flags this condition by setting <strong className="text-primary font-bold">bio_artifact = true</strong>.
+                    Contact resistance jumps to maximum or optical seal is broken, causing the signal to flatline to zero or pick up 50/60 Hz powerline hum. SimData flags this condition by setting <strong className="text-primary font-bold">bio_artifact = true</strong>.
                   </span>
                 </div>
               </div>
@@ -546,6 +553,24 @@ const GLOSSARY_ITEMS = [
     simpleExplanation: 'The number of times the heart beats per minute. Heart rate increases during physical activity, cognitive stress, or emotional startle, and decreases during rest, calm breathing, and physical recovery.',
     lowMeaning: '50 – 65 BPM (Deep rest, calm meditation, or athletic resting pulse).',
     highMeaning: '90 – 130+ BPM (Physical exertion, sudden startle, panic, or mental strain).'
+  },
+  {
+    term: 'PPG & BVP (Photoplethysmography / Blood Volume Pulse)',
+    icon: '🔴',
+    tag: 'Heart & Optical Sensing',
+    figmaVar: 'bio_bpm',
+    simpleExplanation: 'PPG is the optical sensing technology used in almost all consumer wearables and biofeedback monitors (Apple Watch, Oura Ring, Whoop, Garmin, Empatica E4, and earlobe/finger clips). An LED shines green or infrared light into the skin, and a photodetector measures light absorption changes as blood surges through capillary microvascular beds with every heartbeat. This generates a continuous volumetric waveform (Blood Volume Pulse) from which Heart Rate (BPM) and HRV are calculated. Because PPG requires only single-point skin contact, it is the standard cardiac sensor in interaction design.',
+    lowMeaning: 'Lower pulse rate (50 – 65 BPM); calm resting baseline or deep meditation.',
+    highMeaning: 'Elevated pulse rate (90 – 130+ BPM); physical activity, sudden startle, or high cognitive demand.'
+  },
+  {
+    term: 'ECG vs. PPG (Electrical vs. Optical Cardiac Sensing)',
+    icon: '⚡',
+    tag: 'Heart & Sensor Modalities',
+    figmaVar: null,
+    simpleExplanation: 'ECG (Electrocardiography) measures electrical voltage across the heart muscle using multi-point electrodes (such as a Polar H10 chest strap or two-handed contact), producing sharp P-Q-R-S-T electrical spikes. PPG (Photoplethysmography) measures optical blood volume changes beneath the skin using light sensors, producing a smooth rolling wave. While clinical ECG offers millisecond electrical precision, PPG allows passive, single-point wearable integration. However, optical PPG is significantly more vulnerable to motion artifacts: when a user moves their hand or loosens the watch, ambient light leaks into the sensor, causing wild noise that SimData flags with bio_artifact.',
+    lowMeaning: 'PPG: Single-contact optical sensing ideal for wearable UX and everyday prototypes.',
+    highMeaning: 'ECG: Multi-contact electrical sensing ideal for clinical and athletic chest-strap monitoring.'
   },
   {
     term: 'Heart Rate Variability (RMSSD)',

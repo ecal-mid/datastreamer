@@ -34,7 +34,8 @@ function detectBiometricFormat(csvContent) {
     h.includes('chest_resp') ||
     h.includes('respi') ||
     (headers.includes('ecg') && headers.includes('eda')) ||
-    (headers.includes('bvp') && headers.includes('eda'))
+    (headers.includes('bvp') && headers.includes('eda')) ||
+    (headers.includes('ppg') && headers.includes('eda'))
   ) && !headers.includes('rmssd');
   if (isWesad) return 'wesad';
 
@@ -198,7 +199,7 @@ function convertWesadToSimData(csvContent, filename) {
     };
 
     const respCol = findCol(['resp', 'chest_resp', 'respiration', 'respiration_value']);
-    const ecgCol = findCol(['ecg', 'hr', 'bpm', 'heart_rate', 'bvp']);
+    const ecgCol = findCol(['ppg', 'bvp', 'ecg', 'hr', 'bpm', 'heart_rate']);
     const edaCol = findCol(['eda', 'tonic_eda', 'gsr', 'wrist_eda']);
     const labelCol = findCol(['label', 'condition', 'state', 'target']);
     const timeCol = findCol(['time', 'timestamp', 'datetime']);

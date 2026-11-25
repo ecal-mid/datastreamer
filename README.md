@@ -127,7 +127,7 @@ npm run dist:win
 SimData's user interface is crafted with **shadcn/ui** design patterns and Radix UI primitives:
 * **Global Transport Controls:** DAW-style header transport featuring one-click **Play/Pause** (`LIVE` / `PAUSED` indicators) and instant simulation rate multipliers (**`1x`**, **`2x`**, **`4x`**) that synchronize across WebSocket, OSC, and local simulation loops.
 * **Cards & Layout:** High-contrast dark telemetry theme (`Card`, `CardHeader`, `CardTitle`, `CardContent`).
-* **Multi-Trace Oscilloscope:** Canvas 2D engine with real-time respiration curves (CH1), realistic P-Q-R-S-T ECG cardiac vector pulses (CH2), synthetic EEG brainwave trace (CH3: Delta, Theta, Alpha, Beta, Gamma blend), and live status badges (`STREAM PAUSED`, `2x SPEED`, `4x SPEED`).
+* **Multi-Trace Oscilloscope:** Canvas 2D engine with real-time respiration curves (CH1), realistic optical Photoplethysmography / Blood Volume Pulse (PPG / BVP dicrotic wave) with optional ECG electrical toggle (CH2), synthetic EEG brainwave trace (CH3: Delta, Theta, Alpha, Beta, Gamma blend), and live status badges (`STREAM PAUSED`, `2x SPEED`, `4x SPEED`).
 * **Mode Navigation:** Accessible `Tabs` (`TabsList`, `TabsTrigger`, `TabsContent`) for Generative Presets, Manual Puppeteer, and Dataset Playback.
 * **Controls:** Radix-powered `Slider`, `Progress`, `Switch`, and `Button` components.
 * **Badges & Modals:** Live telemetry status `Badge` indicators and `Dialog` modals for Figma setup and JSON payload inspection.

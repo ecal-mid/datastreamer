@@ -32,7 +32,7 @@ SimData **v1.2.0** is a major release introducing:
 ### 2. In-App Biometrics & Interaction Guide (Help Modal)
 - **Tab 1 — Terms & Dictionary:** Clear, accessible explanations of all biometric terms without dense medical jargon or confusing metaphors:
   - Electrodermal Activity: **EDA / GSR**, **Tonic EDA** (SCL baseline), **Phasic EDA** (SCR reaction spikes).
-  - Cardiac & Autonomic: **Heart Rate (BPM)**, **Heart Rate Variability (RMSSD)**, **Cardiorespiratory Harmony (Coherence Score)**.
+  - Cardiac & Autonomic: **Heart Rate (BPM)**, **Optical PPG & Blood Volume Pulse (BVP)**, **ECG vs. PPG Comparison**, **Heart Rate Variability (RMSSD)**, **Cardiorespiratory Harmony (Coherence Score)**.
   - Respiratory: **Breathing Phase & Depth (Respiration)**.
   - Brainwaves: **Alpha (8–12 Hz)**, **Beta (15–30 Hz)**, **Theta (4–8 Hz)**, **Delta (0.5–4 Hz)**, and **SMR Rhythm (12–15 Hz)**.
   - Metadata: **Cognitive State Name (`bio_state`)** and **Artifact Flag (`bio_artifact`)**.
@@ -77,14 +77,20 @@ SimData **v1.2.0** is a major release introducing:
   - Loop toggle and stage countdown telemetry.
 - **Portable Persistence:** Save and share `.playlist.json` files with 1-click export/import and native persistence in `~/Library/Application Support/simdata/playlists/`.
 
-### 5. Alternative Compact Oscilloscope View
+### 5. Photoplethysmography (PPG / BVP) & Dual Cardiac Modality
+- **Authentic Optical Waveform (PPG / BVP):** Synthesizes the organic blood volume pulse curve used by modern consumer wearables (Apple Watch, Oura Ring, Whoop, Garmin, Empatica E4, and earclips). Features the classic dicrotic wave with rapid systolic upstroke, systolic peak, dicrotic notch (aortic valve closure), and gentle diastolic runoff.
+- **1-Click PPG / ECG Toggle:** Added dedicated channel toggle buttons allowing designers to switch between **PPG (Optical Blood Volume Pulse)** and **ECG (Electrical Vector)** in both full and compact views.
+- **Realistic Optical Artifact Modeling:** When motion occurs (`bio_artifact: true`), PPG mode introduces characteristic ambient light-leakage noise and baseline drift.
+- **Persistent Modality Selection:** The chosen cardiac modality is remembered across sessions via `localStorage` (`simdata_cardiac_mode`).
+
+### 6. Alternative Compact Oscilloscope View
 - **Dual View Modes:** Toggle between **Full View** and **Compact View** via an icon button in the oscilloscope header.
-- **Compact 80px Waveform Canvas:** Reduces the oscilloscope height to a streamlined 80px trace showing calibrated ECG, Respiration, and EEG waveforms.
+- **Compact 80px Waveform Canvas:** Reduces the oscilloscope height to a streamlined 80px trace showing calibrated Respiration, Cardiac (PPG/ECG), and EEG waveforms.
 - **Horizontal Telemetry Cards:** Arranges Heart Rate, Breathing, and Coherence metrics horizontally alongside the trace.
 - **Zero-Scroll Interaction:** Allows designers to monitor real-time biosignals continuously while selecting recordings or configuring playlist steps below.
 - **Persistent Preference:** Selected view mode is remembered in `localStorage` (`simdata_osc_view`).
 
-### 6. Header Layout & UI Ergonomics
+### 7. Header Layout & UI Ergonomics
 - **Responsive Navigation:** Shortened "Figma" button and compacted transport controls to prevent overflow on standard laptop screens.
 - **Breakpoint-Stable Badges:** Ensured the `OSC :9000` status badge remains visible across mobile, tablet, and desktop viewports.
 - **Eliminated Layout Shifts:** Removed erratic message counters next to status badges to maintain a fixed, jitter-free header.

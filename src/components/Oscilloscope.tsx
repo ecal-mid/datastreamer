@@ -11,7 +11,8 @@ interface OscilloscopeProps {
   speed?: number;
 }
 
-type ChannelView = 'all' | 'resp' | 'ecg' | 'eeg';
+type ChannelView = 'all' | 'resp' | 'cardiac' | 'eeg';
+type CardiacMode = 'ppg' | 'ecg';
 type ViewMode = 'expanded' | 'compact';
 
 export const Oscilloscope: React.FC<OscilloscopeProps> = ({ telemetry, isPaused = false, speed = 1.0 }) => {
@@ -37,6 +38,26 @@ export const Oscilloscope: React.FC<OscilloscopeProps> = ({ telemetry, isPaused 
     } catch (e) {}
   };
 
+  // Cardiac Sensing Modality: 'ppg' (Optical Blood Volume Pulse used in smartwatches/rings) or 'ecg' (Electrical Vector)
+  const [cardiacMode, setCardiacMode] = useState<CardiacMode>(() => {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const saved = window.localStorage.getItem('simdata_cardiac_mode');
+      if (saved === 'ecg' || saved === 'ppg') return saved;
+    }
+    return 'ppg';
+  });
+  const cardiacModeRef = useRef<CardiacMode>(cardiacMode);
+  cardiacModeRef.current = cardiacMode;
+
+  const handleSetCardiacMode = (mode: CardiacMode) => {
+    setCardiacMode(mode);
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.setItem('simdata_cardiac_mode', mode);
+      }
+    } catch (e) {}
+  };
+
   // Active Channel Display Mode
   const [channelView, setChannelView] = useState<ChannelView>('all');
   const channelViewRef = useRef<ChannelView>('all');
@@ -44,12 +65,12 @@ export const Oscilloscope: React.FC<OscilloscopeProps> = ({ telemetry, isPaused 
 
   // Buffer histories for traces
   const respHistory = useRef<number[]>(new Array(180).fill(0.5));
-  const ecgHistory = useRef<number[]>(new Array(180).fill(0.5));
+  const cardiacHistory = useRef<number[]>(new Array(180).fill(0.5));
   const eegHistory = useRef<number[]>(new Array(180).fill(0.5));
   const edaHistory = useRef<number[]>(new Array(180).fill(0.5));
 
   // Phase trackers
-  const ecgPhase = useRef<number>(0);
+  const cardiacPhase = useRef<number>(0);
   const eegPhase = useRef<number>(0);
 
   useEffect(() => {
@@ -61,34 +82,66 @@ export const Oscilloscope: React.FC<OscilloscopeProps> = ({ telemetry, isPaused 
     respHistory.current.push(respVal);
     if (respHistory.current.length > 200) respHistory.current.shift();
 
-    // 2. Synthesize ECG cardiac beat shape corresponding to current BPM
+    // 2. Synthesize Cardiac beat shape (PPG optical dicrotic wave or ECG PQRST vector) corresponding to current BPM
     const bpm = telemetry.biometrics.hrv.bpm;
     const beatsPerSec = bpm / 60;
-    ecgPhase.current = (ecgPhase.current + (beatsPerSec * (1 / 30) * speed)) % 1.0;
+    cardiacPhase.current = (cardiacPhase.current + (beatsPerSec * (1 / 30) * speed)) % 1.0;
 
-    let ecgPoint = 0.5;
-    const p = ecgPhase.current;
+    let cardiacPoint = 0.5;
+    const p = cardiacPhase.current;
 
-    // P-Q-R-S-T wave model
-    if (p > 0.10 && p < 0.20) {
-      ecgPoint += Math.sin((p - 0.10) * 10 * Math.PI) * 0.10;
-    } else if (p >= 0.20 && p < 0.23) {
-      ecgPoint -= ((p - 0.20) / 0.03) * 0.12;
-    } else if (p >= 0.23 && p < 0.27) {
-      const rProgress = (p - 0.23) / 0.04;
-      ecgPoint += Math.sin(rProgress * Math.PI) * 0.45;
-    } else if (p >= 0.27 && p < 0.30) {
-      ecgPoint -= (1 - (p - 0.27) / 0.03) * 0.18;
-    } else if (p > 0.40 && p < 0.55) {
-      ecgPoint += Math.sin((p - 0.40) * (1 / 0.15) * Math.PI) * 0.15;
+    if (cardiacModeRef.current === 'ppg') {
+      // Photoplethysmogram (PPG / BVP) Optical Blood Volume Pulse Model:
+      // Fast systolic upstroke -> Systolic peak -> Dicrotic notch (aortic valve closure) -> Diastolic wave -> Runoff
+      if (p >= 0.0 && p < 0.16) {
+        // Anacrotic phase: rapid systolic upstroke (sharp increase in arterial blood volume)
+        const progress = p / 0.16;
+        cardiacPoint = 0.20 + 0.65 * Math.sin(progress * (Math.PI / 2));
+      } else if (p >= 0.16 && p < 0.32) {
+        // Early catacrotic phase: systolic blood volume decrease
+        const progress = (p - 0.16) / 0.16;
+        cardiacPoint = 0.85 - 0.35 * Math.sin(progress * (Math.PI / 2));
+      } else if (p >= 0.32 && p < 0.39) {
+        // Dicrotic notch (incisura): transient pressure drop before aortic valve reflection
+        const progress = (p - 0.32) / 0.07;
+        cardiacPoint = 0.50 - 0.06 * Math.sin(progress * Math.PI);
+      } else if (p >= 0.39 && p < 0.52) {
+        // Diastolic wave: secondary rebound peak from arterial elasticity
+        const progress = (p - 0.39) / 0.13;
+        cardiacPoint = 0.44 + 0.12 * Math.sin(progress * Math.PI);
+      } else {
+        // Diastolic runoff: smooth exponential decline to baseline filling
+        const progress = (p - 0.52) / 0.48;
+        cardiacPoint = 0.44 * (1 - progress * 0.55);
+      }
+    } else {
+      // Electrocardiogram (ECG) P-Q-R-S-T Electrical Vector Model:
+      if (p > 0.10 && p < 0.20) {
+        cardiacPoint += Math.sin((p - 0.10) * 10 * Math.PI) * 0.10;
+      } else if (p >= 0.20 && p < 0.23) {
+        cardiacPoint -= ((p - 0.20) / 0.03) * 0.12;
+      } else if (p >= 0.23 && p < 0.27) {
+        const rProgress = (p - 0.23) / 0.04;
+        cardiacPoint += Math.sin(rProgress * Math.PI) * 0.45;
+      } else if (p >= 0.27 && p < 0.30) {
+        cardiacPoint -= (1 - (p - 0.27) / 0.03) * 0.18;
+      } else if (p > 0.40 && p < 0.55) {
+        cardiacPoint += Math.sin((p - 0.40) * (1 / 0.15) * Math.PI) * 0.15;
+      }
     }
 
     if (telemetry.states.artifact_flag) {
-      ecgPoint += (Math.random() - 0.5) * 0.25;
+      if (cardiacModeRef.current === 'ppg') {
+        // Optical PPG motion artifact: ambient light leakage and large baseline drift
+        cardiacPoint += (Math.random() - 0.5) * 0.35 + Math.sin(p * 2 * Math.PI) * 0.15;
+      } else {
+        // Electrical ECG artifact: muscle EMG interference and contact spikes
+        cardiacPoint += (Math.random() - 0.5) * 0.30;
+      }
     }
 
-    ecgHistory.current.push(ecgPoint);
-    if (ecgHistory.current.length > 200) ecgHistory.current.shift();
+    cardiacHistory.current.push(cardiacPoint);
+    if (cardiacHistory.current.length > 200) cardiacHistory.current.shift();
 
     // 3. Synthesize Composite EEG Brainwave trace
     const eegData = telemetry.biometrics?.eeg || ({} as any);
@@ -219,8 +272,9 @@ export const Oscilloscope: React.FC<OscilloscopeProps> = ({ telemetry, isPaused 
         // CH1: Respiration (Emerald, smooth breathing wave)
         drawChannelTrace(respHistory.current, 0, chH, '#10b981', '#10b981aa', isCompact ? 1.4 : 1.8, isCompact ? 2 : 4);
 
-        // CH2: ECG Cardiac (Red, crisp PQRST rhythm)
-        drawChannelTrace(ecgHistory.current, chH, chH, '#ef4444', '#ef4444aa', isCompact ? 1.4 : 1.8, isCompact ? 2 : 4);
+        // CH2: Cardiac (PPG optical BVP or ECG electrical vector)
+        const isPpg = cardiacModeRef.current === 'ppg';
+        drawChannelTrace(cardiacHistory.current, chH, chH, '#ef4444', '#ef4444aa', isCompact ? 1.4 : 1.8, isCompact ? 2 : 4);
 
         // CH3: EEG Brainwaves (Purple / Violet, fine delicate medical pen trace)
         drawChannelTrace(eegHistory.current, chH * 2, chH, '#c084fc', '#c084fc66', isCompact ? 1.0 : 1.2, isCompact ? 1 : 1.5);
@@ -231,7 +285,10 @@ export const Oscilloscope: React.FC<OscilloscopeProps> = ({ telemetry, isPaused 
         ctx.fillText(isCompact ? 'RESP' : 'CH1: RESPIRATION (SINUSOIDAL + RSA)', isCompact ? 8 : 12, isCompact ? 9 : 16);
 
         ctx.fillStyle = '#ef4444cc';
-        ctx.fillText(isCompact ? 'ECG' : 'CH2: ECG CARDIAC VECTOR (COUPLED BPM)', isCompact ? 8 : 12, chH + (isCompact ? 9 : 16));
+        const ch2Text = isCompact
+          ? (isPpg ? 'PPG' : 'ECG')
+          : (isPpg ? 'CH2: PPG / BVP OPTICAL PULSE (COUPLED BPM)' : 'CH2: ECG CARDIAC VECTOR (COUPLED BPM)');
+        ctx.fillText(ch2Text, isCompact ? 8 : 12, chH + (isCompact ? 9 : 16));
 
         ctx.fillStyle = '#c084fccc';
         ctx.fillText(isCompact ? 'EEG' : 'CH3: EEG BRAINWAVE RHYTHMS (ALPHA/BETA/THETA)', isCompact ? 8 : 12, chH * 2 + (isCompact ? 9 : 16));
@@ -241,12 +298,16 @@ export const Oscilloscope: React.FC<OscilloscopeProps> = ({ telemetry, isPaused 
         ctx.font = isCompact ? '9px monospace' : '11px monospace';
         ctx.fillStyle = '#10b981cc';
         ctx.fillText(isCompact ? 'RESP WAVE (SOLO)' : 'CH1: RESPIRATION WAVEFORM (SOLO)', isCompact ? 8 : 12, isCompact ? 12 : 20);
-      } else if (mode === 'ecg') {
-        // Solo ECG
-        drawChannelTrace(ecgHistory.current, 0, height, '#ef4444', '#ef4444aa', isCompact ? 1.6 : 2.0, isCompact ? 3 : 4);
+      } else if (mode === 'cardiac') {
+        // Solo Cardiac
+        const isPpg = cardiacModeRef.current === 'ppg';
+        drawChannelTrace(cardiacHistory.current, 0, height, '#ef4444', '#ef4444aa', isCompact ? 1.6 : 2.0, isCompact ? 3 : 4);
         ctx.font = isCompact ? '9px monospace' : '11px monospace';
         ctx.fillStyle = '#ef4444cc';
-        ctx.fillText(isCompact ? 'ECG VECTOR (SOLO)' : 'CH2: ECG CARDIAC VECTOR (SOLO)', isCompact ? 8 : 12, isCompact ? 12 : 20);
+        const soloText = isCompact
+          ? (isPpg ? 'PPG OPTICAL (SOLO)' : 'ECG VECTOR (SOLO)')
+          : (isPpg ? 'CH2: PHOTOPLETHYSMOGRAPHY / BVP (OPTICAL DICROTIC PULSE)' : 'CH2: ELECTROCARDIOGRAM (P-Q-R-S-T CARDIAC ELECTRICAL VECTOR)');
+        ctx.fillText(soloText, isCompact ? 8 : 12, isCompact ? 12 : 20);
       } else if (mode === 'eeg') {
         // Solo EEG
         drawChannelTrace(eegHistory.current, 0, height, '#c084fc', '#c084fc66', isCompact ? 1.2 : 1.4, isCompact ? 1.5 : 2);
@@ -310,15 +371,15 @@ export const Oscilloscope: React.FC<OscilloscopeProps> = ({ telemetry, isPaused 
                   RESP
                 </button>
                 <button
-                  onClick={() => setChannelView('ecg')}
+                  onClick={() => setChannelView('cardiac')}
                   className={`px-1 py-0.5 rounded transition-all cursor-pointer ${
-                    channelView === 'ecg'
+                    channelView === 'cardiac'
                       ? 'bg-red-500/25 text-red-300 border border-red-500/50 font-bold'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
-                  title="Solo ECG Cardiac channel"
+                  title={`Solo Cardiac channel (${cardiacMode.toUpperCase()})`}
                 >
-                  ECG
+                  {cardiacMode.toUpperCase()}
                 </button>
                 <button
                   onClick={() => setChannelView('eeg')}
@@ -360,7 +421,7 @@ export const Oscilloscope: React.FC<OscilloscopeProps> = ({ telemetry, isPaused 
                       ? 'bg-primary text-primary-foreground font-bold shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
-                  title="Show all 3 channels (Respiration, ECG, Brainwaves)"
+                  title="Show all 3 channels (Respiration, Cardiac Pulse, Brainwaves)"
                 >
                   3-CH ALL
                 </button>
@@ -376,15 +437,15 @@ export const Oscilloscope: React.FC<OscilloscopeProps> = ({ telemetry, isPaused 
                   RESP
                 </button>
                 <button
-                  onClick={() => setChannelView('ecg')}
+                  onClick={() => setChannelView('cardiac')}
                   className={`px-1.5 py-0.5 rounded transition-all cursor-pointer ${
-                    channelView === 'ecg'
+                    channelView === 'cardiac'
                       ? 'bg-red-500/25 text-red-300 border border-red-500/50 font-bold'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
-                  title="Solo ECG Cardiac channel"
+                  title={`Solo Cardiac pulse channel (${cardiacMode.toUpperCase()})`}
                 >
-                  ECG
+                  {cardiacMode.toUpperCase()}
                 </button>
                 <button
                   onClick={() => setChannelView('eeg')}
@@ -396,6 +457,32 @@ export const Oscilloscope: React.FC<OscilloscopeProps> = ({ telemetry, isPaused 
                   title="Solo EEG Brainwave channel"
                 >
                   EEG
+                </button>
+              </div>
+
+              {/* Sensor Modality Toggle: PPG (Optical) vs ECG (Electrical) */}
+              <div className="flex items-center bg-secondary/60 p-0.5 rounded border border-border/70 text-[9px] font-mono">
+                <button
+                  onClick={() => handleSetCardiacMode('ppg')}
+                  className={`px-1.5 py-0.5 rounded transition-all cursor-pointer ${
+                    cardiacMode === 'ppg'
+                      ? 'bg-red-500/30 text-red-300 font-bold border border-red-500/50 shadow-xs'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  title="PPG: Photoplethysmography / Blood Volume Pulse (optical sensor used in smartwatches, rings & earclips)"
+                >
+                  PPG
+                </button>
+                <button
+                  onClick={() => handleSetCardiacMode('ecg')}
+                  className={`px-1.5 py-0.5 rounded transition-all cursor-pointer ${
+                    cardiacMode === 'ecg'
+                      ? 'bg-red-500/30 text-red-300 font-bold border border-red-500/50 shadow-xs'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  title="ECG: Electrocardiogram (electrical vector used in chest straps & clinical leads)"
+                >
+                  ECG
                 </button>
               </div>
 
@@ -420,6 +507,15 @@ export const Oscilloscope: React.FC<OscilloscopeProps> = ({ telemetry, isPaused 
 
           {/* Right section of Top Bar: View Mode Switcher (Full vs Compact) */}
           <div className="flex items-center gap-1.5 ml-auto">
+            {isCompact && (
+              <button
+                onClick={() => handleSetCardiacMode(cardiacMode === 'ppg' ? 'ecg' : 'ppg')}
+                className="text-[9px] font-mono px-1.5 py-0.5 rounded border border-border/60 bg-secondary/50 text-muted-foreground hover:text-foreground cursor-pointer"
+                title={`Currently viewing ${cardiacMode.toUpperCase()}. Click to switch to ${cardiacMode === 'ppg' ? 'ECG' : 'PPG'}.`}
+              >
+                Pulse: <strong className="text-red-400">{cardiacMode.toUpperCase()}</strong>
+              </button>
+            )}
             {isCompact && isPaused && (
               <Badge variant="secondary" className="font-mono bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[9px] px-1 py-0 h-4">
                 PAUSED
@@ -484,7 +580,7 @@ export const Oscilloscope: React.FC<OscilloscopeProps> = ({ telemetry, isPaused 
               {/* Cardiac indicator */}
               <div className="flex items-center gap-1.5 text-red-400">
                 <Heart className="w-3.5 h-3.5" />
-                <span>BPM: <strong className="text-foreground">{hrv.bpm.toFixed(1)}</strong></span>
+                <span>{cardiacMode.toUpperCase()}: <strong className="text-foreground">{hrv.bpm.toFixed(1)} BPM</strong></span>
               </div>
 
               {/* Brainwaves indicator */}
