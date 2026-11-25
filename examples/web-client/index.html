@@ -2,117 +2,431 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>SimBio Minimal Web Client Example</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SimData Web Client — Biofeedback Prototype Starter</title>
   <style>
+    :root {
+      --resp: 0.5;
+      --bpm: 70;
+      --coherence: 0.5;
+      --calm: 0.5;
+      --phasic: 0.0;
+      --bg: #090d16;
+      --card-bg: rgba(17, 24, 39, 0.75);
+      --border: rgba(255, 255, 255, 0.08);
+      --primary: #06b6d4;
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --red: #ef4444;
+      --purple: #a855f7;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
-      background: #090d16;
+      background: var(--bg);
       color: #e2e8f0;
-      font-family: -apple-system, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      min-height: 100vh;
-      margin: 0;
+      padding: 24px;
+      overflow-x: hidden;
+      transition: background 0.5s ease;
     }
+
+    /* Ambient dynamic coherence glow */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(6, 182, 212, calc(var(--coherence) * 0.15)) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+      transition: background 0.8s ease;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 540px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    /* Header & Connection status */
+    header {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    h1 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #f8fafc;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .pill {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 11px;
+      padding: 3px 9px;
+      border-radius: 9999px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.04);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.3s ease;
+    }
+
+    .pill-status {
+      color: #94a3b8;
+    }
+
+    .pill-state {
+      border-color: rgba(6, 182, 212, 0.4);
+      color: var(--primary);
+      background: rgba(6, 182, 212, 0.1);
+      font-weight: 600;
+    }
+
+    .pill-stage {
+      border-color: rgba(168, 85, 247, 0.4);
+      color: var(--purple);
+      background: rgba(168, 85, 247, 0.1);
+    }
+
+    /* Artifact warning banner */
+    .artifact-banner {
+      width: 100%;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
+      font-family: ui-monospace, monospace;
+      font-size: 12px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      animation: pulse 1.5s infinite;
+    }
+
+    body.sensor-artifact .artifact-banner {
+      display: flex;
+    }
+
+    /* Breathing Orb Container */
+    .orb-stage {
+      position: relative;
+      width: 220px;
+      height: 220px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 10px 0;
+    }
+
+    /* Fluid Breathing Orb */
     .orb {
-      width: 140px;
-      height: 140px;
+      width: 130px;
+      height: 130px;
       border-radius: 50%;
-      background: radial-gradient(circle, #38bdf8 0%, #0369a1 70%, transparent 100%);
-      box-shadow: 0 0 40px #38bdf866;
-      transition: transform 0.1s ease-out;
-      margin-bottom: 30px;
+      background: radial-gradient(circle at 35% 35%, #38bdf8 0%, #0284c7 50%, #0369a1 100%);
+      box-shadow: 0 0 50px rgba(56, 189, 248, calc(0.3 + var(--calm) * 0.4));
+      transform: scale(calc(0.85 + var(--resp) * 0.45));
+      transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.4s ease, box-shadow 0.4s ease;
+      position: relative;
+      z-index: 2;
     }
+
+    body.sensor-artifact .orb {
+      filter: blur(4px) grayscale(60%);
+      opacity: 0.45;
+    }
+
+    /* Cardiac pulse ripple ring */
+    .pulse-ring {
+      position: absolute;
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      border: 2px solid rgba(239, 68, 68, 0.6);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .pulse-ring.beat {
+      animation: pulseRipple 0.8s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+    }
+
+    @keyframes pulseRipple {
+      0% { transform: scale(0.9); opacity: 0.8; }
+      100% { transform: scale(2.0); opacity: 0; }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    /* Telemetry HUD Grid */
     .hud {
-      background: #111827;
-      padding: 16px 24px;
-      border-radius: 12px;
-      border: 1px solid #1f2937;
-      font-family: monospace;
-      font-size: 14px;
+      width: 100%;
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 20px;
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px 24px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      font-family: ui-monospace, monospace;
     }
-    .hud span { color: #38bdf8; font-weight: bold; }
-    .status { margin-bottom: 20px; font-size: 13px; color: #9ca3af; font-family: monospace; }
+
+    .metric {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .metric-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #64748b;
+    }
+
+    .metric-val {
+      font-size: 18px;
+      font-weight: 700;
+      color: #f1f5f9;
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+
+    .metric-unit {
+      font-size: 10px;
+      color: #64748b;
+      font-weight: normal;
+    }
+
+    /* Footer instructions for students */
+    footer {
+      text-align: center;
+      font-size: 11px;
+      font-family: ui-monospace, monospace;
+      color: #64748b;
+      line-height: 1.5;
+    }
   </style>
 </head>
 <body>
-  <h1>SimData Web Client Demo</h1>
-  <div class="status" id="status">Connecting to ws://127.0.0.1:8081...</div>
+  <div class="container">
+    <header>
+      <h1>SimData Web Client</h1>
+      <div class="badge-bar">
+        <span class="pill pill-status" id="status-pill">● Connecting to :8081...</span>
+        <span class="pill pill-state" id="state-pill">Baseline / Neutral</span>
+        <span class="pill pill-stage" id="stage-pill" style="display: none;">Continuous</span>
+      </div>
+    </header>
 
-  <div class="orb" id="orb"></div>
+    <!-- Artifact Warning Alert -->
+    <div class="artifact-banner" id="artifact-banner">
+      <span>⚠️</span>
+      <span>Sensor artifact detected (motion or loose contact). Visual tracking paused.</span>
+    </div>
 
-  <div class="hud">
-    <div>BPM: <span id="bpm">--</span></div>
-    <div>Coherence: <span id="coherence">--</span></div>
-    <div>Respiration: <span id="resp">--</span></div>
-    <div>Alpha Power: <span id="alpha">--</span></div>
+    <!-- Organic Respiration Orb & Cardiac Pulse Ring -->
+    <div class="orb-stage">
+      <div class="pulse-ring" id="pulse-ring"></div>
+      <div class="orb" id="orb"></div>
+    </div>
+
+    <!-- Live Telemetry Readout Grid -->
+    <div class="hud">
+      <div class="metric">
+        <span class="metric-label">Respiration</span>
+        <div class="metric-val">
+          <span id="resp-val" style="color: var(--emerald);">0.50</span>
+          <span class="metric-unit" id="resp-phase">inhale</span>
+        </div>
+      </div>
+
+      <div class="metric">
+        <span class="metric-label">Pulse (PPG)</span>
+        <div class="metric-val">
+          <span id="bpm-val" style="color: var(--red);">70.0</span>
+          <span class="metric-unit">BPM</span>
+        </div>
+      </div>
+
+      <div class="metric">
+        <span class="metric-label">Coherence</span>
+        <div class="metric-val">
+          <span id="coh-val" style="color: var(--primary);">0.50</span>
+          <span class="metric-unit">0–1</span>
+        </div>
+      </div>
+
+      <div class="metric">
+        <span class="metric-label">Tonic EDA</span>
+        <div class="metric-val">
+          <span id="eda-val" style="color: var(--amber);">4.5</span>
+          <span class="metric-unit">µS</span>
+        </div>
+      </div>
+
+      <div class="metric">
+        <span class="metric-label">Alpha Power</span>
+        <div class="metric-val">
+          <span id="alpha-val" style="color: var(--purple);">0.50</span>
+          <span class="metric-unit">8–12Hz</span>
+        </div>
+      </div>
+
+      <div class="metric">
+        <span class="metric-label">Calm Index</span>
+        <div class="metric-val">
+          <span id="calm-val" style="color: var(--primary);">0.50</span>
+          <span class="metric-unit">score</span>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      Connects to <code>ws://127.0.0.1:8081</code> (or :8080) at 30 Hz.<br>
+      Use this file as a starting template for creative web prototypes & vibe coding.
+    </footer>
   </div>
 
   <script>
+    // Dual-port fallback: primary :8081, secondary :8080
     const PORTS = [8081, 8080];
-    let portIndex = 0;
+    let portIdx = 0;
     let ws = null;
-    const orb = document.getElementById('orb');
-    const status = document.getElementById('status');
-    const bpmEl = document.getElementById('bpm');
-    const cohEl = document.getElementById('coherence');
-    const respEl = document.getElementById('resp');
-    const alphaEl = document.getElementById('alpha');
+    let lastBeatTime = 0;
+
+    // DOM Elements
+    const statusPill = document.getElementById('status-pill');
+    const statePill = document.getElementById('state-pill');
+    const stagePill = document.getElementById('stage-pill');
+    const pulseRing = document.getElementById('pulse-ring');
+    const respVal = document.getElementById('resp-val');
+    const respPhase = document.getElementById('resp-phase');
+    const bpmVal = document.getElementById('bpm-val');
+    const cohVal = document.getElementById('coh-val');
+    const edaVal = document.getElementById('eda-val');
+    const alphaVal = document.getElementById('alpha-val');
+    const calmVal = document.getElementById('calm-val');
 
     function connect() {
-      const port = PORTS[portIndex];
+      const port = PORTS[portIdx];
       ws = new WebSocket(`ws://127.0.0.1:${port}`);
 
       ws.onopen = () => {
-        status.textContent = `🟢 Connected to SimData ws://127.0.0.1:${port}`;
-        status.style.color = '#10b981';
+        statusPill.textContent = `● Connected (: ${port})`;
+        statusPill.style.color = '#10b981';
       };
 
       ws.onclose = () => {
-        portIndex = (portIndex + 1) % PORTS.length;
-        status.textContent = `Retrying on port ${PORTS[portIndex]}...`;
-        setTimeout(connect, 1500);
+        statusPill.textContent = `○ Disconnected. Retrying...`;
+        statusPill.style.color = '#ef4444';
+        portIdx = (portIdx + 1) % PORTS.length;
+        setTimeout(connect, 2000);
       };
 
-      ws.onerror = () => {
-        ws.close();
-      };
+      ws.onerror = () => ws.close();
 
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
           if (!data.biometrics) return;
 
-          const bpm = data.biometrics.hrv.bpm;
-          const coherence = data.biometrics.hrv.coherence;
-          const resp = data.biometrics.respiration.value;
-          const alpha = data.biometrics.eeg.alpha;
+          // 1. Extract Biometrics & States
+          const resp = data.biometrics.respiration?.value ?? 0.5;
+          const phase = data.biometrics.respiration?.phase ?? 'inhale';
+          const bpm = data.biometrics.hrv?.bpm ?? 70.0;
+          const coherence = data.biometrics.hrv?.coherence ?? 0.5;
+          const edaTonic = data.biometrics.eda?.tonic ?? 4.5;
+          const edaPhasic = data.biometrics.eda?.phasic ?? 0.0;
+          const alpha = data.biometrics.eeg?.alpha ?? 0.5;
+          const calmIndex = data.states?.calm_index ?? 0.5;
+          const stateName = data.states?.state_name ?? 'Baseline / Neutral';
+          const stageName = data.states?.stage_name;
+          const isArtifact = Boolean(data.states?.artifact_flag);
 
-          bpmEl.textContent = bpm.toFixed(1);
-          cohEl.textContent = coherence.toFixed(2);
-          respEl.textContent = resp.toFixed(2);
-          alphaEl.textContent = alpha.toFixed(2);
+          // 2. Drive CSS Custom Properties on :root for zero-overhead fluid styling!
+          document.documentElement.style.setProperty('--resp', resp);
+          document.documentElement.style.setProperty('--bpm', bpm);
+          document.documentElement.style.setProperty('--coherence', coherence);
+          document.documentElement.style.setProperty('--calm', calmIndex);
+          document.documentElement.style.setProperty('--phasic', edaPhasic);
 
-          // Modulate orb size with respiration (0.8x to 1.6x)
-          const scale = 0.8 + resp * 0.8;
-          orb.style.transform = `scale(${scale})`;
-        } catch (e) {}
-      };
+          // 3. Update Text Readouts
+          respVal.textContent = resp.toFixed(2);
+          respPhase.textContent = phase;
+          bpmVal.textContent = bpm.toFixed(1);
+          cohVal.textContent = coherence.toFixed(2);
+          edaVal.textContent = edaTonic.toFixed(1);
+          alphaVal.textContent = alpha.toFixed(2);
+          calmVal.textContent = calmIndex.toFixed(2);
+          statePill.textContent = stateName;
 
-      ws.onclose = () => {
-        status.textContent = `🔴 Disconnected. Retrying port ${PORTS[(portIndex + 1) % PORTS.length]}...`;
-        status.style.color = '#ef4444';
-        portIndex = (portIndex + 1) % PORTS.length;
-        setTimeout(connect, 1500);
+          if (stageName) {
+            stagePill.textContent = stageName;
+            stagePill.style.display = 'inline-flex';
+          } else {
+            stagePill.style.display = 'none';
+          }
+
+          // 4. Toggle Artifact Error State
+          document.body.classList.toggle('sensor-artifact', isArtifact);
+
+          // 5. Trigger Heartbeat Pulse Ring
+          const now = Date.now();
+          const beatInterval = (60 / bpm) * 1000;
+          if (now - lastBeatTime >= beatInterval && !isArtifact) {
+            lastBeatTime = now;
+            pulseRing.classList.remove('beat');
+            void pulseRing.offsetWidth; // Force CSS reflow to re-trigger keyframe
+            pulseRing.classList.add('beat');
+          }
+        } catch (err) {
+          console.error('[SimData Client] Parse error:', err);
+        }
       };
     }
 
+    // Launch connection
     connect();
   </script>
 </body>
 </html>
-
