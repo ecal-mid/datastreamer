@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { SimDataTelemetry } from '../engine/types';
+import { InfoButton } from './InfoButton';
 import { Heart, Wind, ShieldAlert, Zap, Brain, Layers } from 'lucide-react';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
@@ -575,18 +576,21 @@ export const Oscilloscope: React.FC<OscilloscopeProps> = ({ telemetry, isPaused 
               <div className="flex items-center gap-1.5 text-emerald-400">
                 <Wind className="w-3.5 h-3.5" />
                 <span>Resp: <strong className="text-foreground uppercase">{respiration.phase}</strong> ({respiration.value.toFixed(2)})</span>
+                <InfoButton metric="respiration" />
               </div>
 
               {/* Cardiac indicator */}
               <div className="flex items-center gap-1.5 text-red-400">
                 <Heart className="w-3.5 h-3.5" />
                 <span>{cardiacMode.toUpperCase()}: <strong className="text-foreground">{hrv.bpm.toFixed(1)} BPM</strong></span>
+                <InfoButton metric="cardiac" />
               </div>
 
               {/* Brainwaves indicator */}
               <div className="flex items-center gap-1.5 text-purple-400">
                 <Brain className="w-3.5 h-3.5" />
                 <span>EEG: <strong className="text-foreground">{dominantRhythm}</strong> (α: {eeg.alpha.toFixed(2)})</span>
+                <InfoButton metric="eeg" />
               </div>
             </div>
 
@@ -602,7 +606,10 @@ export const Oscilloscope: React.FC<OscilloscopeProps> = ({ telemetry, isPaused 
         {/* Coherence Score Card */}
         <Card className={`bg-card/60 border-border p-2 sm:p-2.5 flex flex-col justify-between ${isCompact ? 'h-full min-h-[110px]' : ''}`}>
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span className={`font-mono uppercase tracking-wide ${isCompact ? 'text-[10px]' : 'text-xs'}`}>Coherence</span>
+            <span className="flex items-center gap-1">
+              <span className={`font-mono uppercase tracking-wide ${isCompact ? 'text-[10px]' : 'text-xs'}`}>Coherence</span>
+              <InfoButton metric="coherence" size={isCompact ? 10 : 12} />
+            </span>
             <Badge
               variant={hrv.coherence >= 0.7 ? 'success' : hrv.coherence >= 0.4 ? 'warning' : 'destructive'}
               className={`${isCompact ? 'text-[8px] px-1 py-0 h-3.5' : 'text-[9px] px-1.5 py-0'}`}
@@ -629,6 +636,7 @@ export const Oscilloscope: React.FC<OscilloscopeProps> = ({ telemetry, isPaused 
             <div className="flex items-center gap-1 text-amber-400">
               <Zap className={isCompact ? "w-3 h-3" : "w-3.5 h-3.5"} />
               <span className={`font-mono uppercase tracking-wide ${isCompact ? 'text-[10px]' : 'text-xs'}`}>EDA / GSR</span>
+              <InfoButton metric="eda" size={isCompact ? 10 : 12} className="text-muted-foreground" />
             </div>
             <span className="text-[10px] text-muted-foreground font-mono">µS</span>
           </div>
@@ -650,7 +658,7 @@ export const Oscilloscope: React.FC<OscilloscopeProps> = ({ telemetry, isPaused 
         {/* Calm & Focus Dual Indices Card */}
         <Card className={`bg-card/60 border-border p-2 sm:p-2.5 flex flex-col justify-between ${isCompact ? 'h-full min-h-[110px]' : ''}`}>
           <div className={`flex items-center justify-between font-mono uppercase text-muted-foreground gap-1 ${isCompact ? 'mb-1 text-[10px]' : 'mb-1.5 text-xs'}`}>
-            <span className={isCompact ? "text-[9px]" : ""}>State</span>
+            <span className={`flex items-center gap-1 ${isCompact ? "text-[9px]" : ""}`}>State <InfoButton metric="state" size={isCompact ? 10 : 12} /></span>
             <Badge variant="cyan" className={`${isCompact ? 'text-[8px] px-1 py-0 h-3.5 max-w-[70px]' : 'text-[9px] px-1.5 py-0 max-w-[130px]'} font-normal truncate`} title={state_name || 'Baseline'}>
               {state_name || 'Baseline'}
             </Badge>
@@ -658,7 +666,7 @@ export const Oscilloscope: React.FC<OscilloscopeProps> = ({ telemetry, isPaused 
           <div className={isCompact ? "space-y-1" : "space-y-2"}>
             <div>
               <div className={`flex justify-between font-mono ${isCompact ? 'text-[9px] mb-0.5' : 'text-[11px] mb-1'}`}>
-                <span className="text-primary">Calm</span>
+                <span className="text-primary flex items-center gap-1">Calm <InfoButton metric="calm" size={isCompact ? 10 : 11} /></span>
                 <span className="text-foreground font-bold">{calm_index.toFixed(2)}</span>
               </div>
               <Progress
@@ -670,7 +678,7 @@ export const Oscilloscope: React.FC<OscilloscopeProps> = ({ telemetry, isPaused 
 
             <div>
               <div className={`flex justify-between font-mono ${isCompact ? 'text-[9px] mb-0.5' : 'text-[11px] mb-1'}`}>
-                <span className="text-purple-400">Focus</span>
+                <span className="text-purple-400 flex items-center gap-1">Focus <InfoButton metric="focus" size={isCompact ? 10 : 11} /></span>
                 <span className="text-foreground font-bold">{focus_index.toFixed(2)}</span>
               </div>
               <Progress
