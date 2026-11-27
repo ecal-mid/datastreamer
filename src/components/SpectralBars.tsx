@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { EegBands } from '../engine/types';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
+import { InfoButton } from './InfoButton';
 
 interface SpectralBarsProps {
   eeg: EegBands;
@@ -50,6 +51,7 @@ export const SpectralBars: React.FC<SpectralBarsProps> = ({ eeg }) => {
           <span className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground font-semibold">
             EEG Spectral Band Power (0.0 – 1.0)
           </span>
+          <InfoButton metric="eegBands" />
           <Badge variant="secondary" className="font-mono text-[9px] py-0 px-1.5 h-4 hidden sm:inline-flex">
             1D Drift
           </Badge>
